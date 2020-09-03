@@ -2,50 +2,41 @@ package com.example.bethereorbesquare.activities;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
 
 import androidx.annotation.Nullable;
 
 import com.example.bethereorbesquare.DatabaseHelper;
-import com.example.bethereorbesquare.R;
 import com.example.bethereorbesquare.listeners.FieldListener;
 import com.example.bethereorbesquare.shapes.Rectangle;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 public class Field extends Activity {
 
     private DatabaseHelper dbHelper;
 
     private View drawView;
-    private Button switchButton;
     private int rows, columns;
 
     private Rectangle firstSelected, secondSelected;
 
     private List<Rectangle> field;
-    private Random rand = new Random();
-
     private List<FieldListener> listeners = new ArrayList<>();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_field);
-        drawView = findViewById(R.id.draw_view);
-        switchButton = findViewById(R.id.switch_button);
+//        setContentView(R.layout.activity_field);
+//        drawView = findViewById(R.id.draw_view);
 
         Bundle extras = getIntent().getExtras();
         assert extras != null;
@@ -55,85 +46,28 @@ public class Field extends Activity {
         columns = dimensions.getInt("columns");
         if (rows <= 0 || columns <= 0) throw new IllegalArgumentException();
 
-        field = new ArrayList<>(rows * columns);
-        for (int i = 0; i < rows * columns; i++)
-            field.add(new Rectangle(0, 0, 0, 0,
-                    Color.rgb(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256))));
+        if(dbHelper == null) dbHelper = new DatabaseHelper(this);
+        dbHelper.initRectanglesDatabase(rows*columns);
 
         drawView = new DrawView(this);
-        drawView.invalidate();
-        drawView.requestLayout();
-        fieldChanged();
         drawView.setFocusableInTouchMode(true);
         drawView.setEnabled(true);
         drawView.setClickable(true);
-//        setContentView(drawView);
-
-        switchButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(secondSelected != null) {
-                    int index1 = field.indexOf(firstSelected), index2 = field.indexOf(secondSelected);
-                    field.set(index1, secondSelected);
-                    field.set(index2, firstSelected);
-                    firstSelected.setSelected(false);
-                    secondSelected.setSelected(false);
-                    firstSelected = secondSelected = null;
-                    v.invalidate();
-                    v.requestLayout();
-                    fieldChanged();
-                }
-            }
-        });
+        drawView.setVisibility(View.VISIBLE);
+        setContentView(drawView);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-//        pref = getPreferences(Context.MODE_PRIVATE);
-//
-//        SharedPreferences.Editor editor = pref.edit();
-//        editor.clear();
-//        editor.putInt("rows", rows);
-//        editor.putInt("columns", columns);
-//        int i = 0;
-//        for(Rectangle r : field) {
-//            editor.putInt("color" + i, r.getColor());
-//            i++;
-//        }
-//        editor.apply();
+        dbHelper.insertAllRectangles(field);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-//        pref = getPreferences(Context.MODE_PRIVATE);
-//
-//        rows = pref.getInt("rows", 0);
-//        columns = pref.getInt("columns", 0);
-//        if(field == null) field = new ArrayList<>(rows*columns);
-//
-//        int color;
-//        for(int i = 0; i < rows*columns; i++) {
-//            color = pref.getInt("color" + i, 0);
-//            field.add(new Rectangle(0, 0, 0, 0, color));
-//        }
+        field = dbHelper.getAllRectangles();
     }
-
-    //    @Override
-//    protected void onSaveInstanceState(@NonNull Bundle outState) {
-//        super.onSaveInstanceState(outState);
-//        outState.putParcelableArrayList("field", (ArrayList<? extends Parcelable>) field);
-//    }
-//
-//    @Override
-//    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
-//        super.onRestoreInstanceState(savedInstanceState);
-//        field = savedInstanceState.getParcelableArrayList("field");
-//        drawView.invalidate();
-//        drawView.requestLayout();
-//        fieldChanged();
-//    }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -163,6 +97,8 @@ public class Field extends Activity {
         private int rectWidth = this.getWidth() / columns;
         private int rectHeight = this.getHeight() / rows;
 
+//        private Button switchButton;
+
         public DrawView(Context context) {
             super(context);
             init();
@@ -182,6 +118,23 @@ public class Field extends Activity {
             paint.setStrokeWidth(1f);
             paint.setAntiAlias(false);
             paint.setStyle(Paint.Style.FILL);
+
+//            switchButton.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    if(secondSelected != null) {
+//                        int index1 = field.indexOf(firstSelected), index2 = field.indexOf(secondSelected);
+//                        field.set(index1, secondSelected);
+//                        field.set(index2, firstSelected);
+//                        firstSelected.setSelected(false);
+//                        secondSelected.setSelected(false);
+//                        firstSelected = secondSelected = null;
+//                        v.invalidate();
+//                        v.requestLayout();
+//                        fieldChanged();
+//                    }
+//                }
+//            });
         }
 
         @Override
