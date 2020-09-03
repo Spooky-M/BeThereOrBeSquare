@@ -11,6 +11,7 @@ import java.util.Objects;
 
 public class Rectangle implements Parcelable {
 
+    int number;
     private int left, top, right, bottom;
     private int color;
     private boolean isSelected;

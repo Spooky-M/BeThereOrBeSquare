@@ -34,11 +34,7 @@ public class MainActivity extends AppCompatActivity {
         continueButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(savedInstanceState != null) {
-                    Intent intent = new Intent(MainActivity.this, Field.class);
-                    intent.putExtra("field", savedInstanceState.getBundle("field"));
-                    startActivity(intent);
-                }
+
             }
         });
     }

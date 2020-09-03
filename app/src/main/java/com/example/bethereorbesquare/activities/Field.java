@@ -2,22 +2,22 @@ package com.example.bethereorbesquare.activities;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.example.bethereorbesquare.listeners.FieldListener;
+import com.example.bethereorbesquare.DatabaseHelper;
 import com.example.bethereorbesquare.R;
+import com.example.bethereorbesquare.listeners.FieldListener;
 import com.example.bethereorbesquare.shapes.Rectangle;
 
 import java.util.ArrayList;
@@ -27,12 +27,13 @@ import java.util.Random;
 
 public class Field extends Activity {
 
+    private DatabaseHelper dbHelper;
+
     private View drawView;
     private Button switchButton;
     private int rows, columns;
 
     private Rectangle firstSelected, secondSelected;
-    private int numberOfSelected;
 
     private List<Rectangle> field;
     private Random rand = new Random();
@@ -46,9 +47,6 @@ public class Field extends Activity {
         drawView = findViewById(R.id.draw_view);
         switchButton = findViewById(R.id.switch_button);
 
-//        if(savedInstanceState != null) {
-//            field = savedInstanceState.getParcelableArrayList("field");
-//        } else {
         Bundle extras = getIntent().getExtras();
         assert extras != null;
         Bundle dimensions = extras.getBundle("dimensions");
@@ -61,10 +59,15 @@ public class Field extends Activity {
         for (int i = 0; i < rows * columns; i++)
             field.add(new Rectangle(0, 0, 0, 0,
                     Color.rgb(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256))));
-//        }
 
         drawView = new DrawView(this);
-        setContentView(drawView);
+        drawView.invalidate();
+        drawView.requestLayout();
+        fieldChanged();
+        drawView.setFocusableInTouchMode(true);
+        drawView.setEnabled(true);
+        drawView.setClickable(true);
+//        setContentView(drawView);
 
         switchButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -85,16 +88,52 @@ public class Field extends Activity {
     }
 
     @Override
-    protected void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList("field", (ArrayList<? extends Parcelable>) field);
+    protected void onPause() {
+        super.onPause();
+//        pref = getPreferences(Context.MODE_PRIVATE);
+//
+//        SharedPreferences.Editor editor = pref.edit();
+//        editor.clear();
+//        editor.putInt("rows", rows);
+//        editor.putInt("columns", columns);
+//        int i = 0;
+//        for(Rectangle r : field) {
+//            editor.putInt("color" + i, r.getColor());
+//            i++;
+//        }
+//        editor.apply();
     }
 
     @Override
-    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        field = savedInstanceState.getParcelableArrayList("field");
+    protected void onResume() {
+        super.onResume();
+//        pref = getPreferences(Context.MODE_PRIVATE);
+//
+//        rows = pref.getInt("rows", 0);
+//        columns = pref.getInt("columns", 0);
+//        if(field == null) field = new ArrayList<>(rows*columns);
+//
+//        int color;
+//        for(int i = 0; i < rows*columns; i++) {
+//            color = pref.getInt("color" + i, 0);
+//            field.add(new Rectangle(0, 0, 0, 0, color));
+//        }
     }
+
+    //    @Override
+//    protected void onSaveInstanceState(@NonNull Bundle outState) {
+//        super.onSaveInstanceState(outState);
+//        outState.putParcelableArrayList("field", (ArrayList<? extends Parcelable>) field);
+//    }
+//
+//    @Override
+//    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+//        super.onRestoreInstanceState(savedInstanceState);
+//        field = savedInstanceState.getParcelableArrayList("field");
+//        drawView.invalidate();
+//        drawView.requestLayout();
+//        fieldChanged();
+//    }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {

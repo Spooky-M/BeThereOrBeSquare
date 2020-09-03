@@ -8,7 +8,7 @@
     <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/editTextRows"
         android:layout_width="206dp"
-        android:layout_height="38dp"
+        android:layout_height="45dp"
         android:layout_marginTop="8dp"
         android:gravity="center|center_horizontal"
         android:hint="@string/rows_input"
@@ -20,7 +20,7 @@
     <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/editTextColumns"
         android:layout_width="206dp"
-        android:layout_height="38dp"
+        android:layout_height="45dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="132dp"
         android:gravity="center"
