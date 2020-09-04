@@ -10,5 +10,6 @@
     <string name="next_button">Next</string>
     <string name="switch_button">Switch</string>
     <string name="help_text">Values must be whole numbers greater than 0.</string>
+    <string name="error_text">There\'s no saved state!</string>
     <string name="draw_view">Field</string>
 </resources>

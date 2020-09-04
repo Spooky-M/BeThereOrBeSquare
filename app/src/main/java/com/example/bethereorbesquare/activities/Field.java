@@ -46,8 +46,11 @@ public class Field extends Activity {
         columns = dimensions.getInt("columns");
         if (rows <= 0 || columns <= 0) throw new IllegalArgumentException();
 
-        if(dbHelper == null) dbHelper = new DatabaseHelper(this);
-        dbHelper.initRectanglesDatabase(rows*columns);
+        if(dbHelper == null) {
+            dbHelper = new DatabaseHelper(this);
+            field = dbHelper.getAllRectangles();
+            if(field == null || field.isEmpty()) dbHelper.initRectanglesDatabase(rows*columns);
+        }
 
         drawView = new DrawView(this);
         drawView.setFocusableInTouchMode(true);

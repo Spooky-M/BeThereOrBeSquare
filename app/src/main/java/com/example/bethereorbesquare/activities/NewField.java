@@ -59,7 +59,7 @@ public class NewField extends Activity {
                 } catch (IllegalArgumentException e) {
                     LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
                     assert inflater != null;
-                    popupView = inflater.inflate(R.layout.popup_window, null);
+                    popupView = inflater.inflate(R.layout.popup_window_help, null);
                     popupView.setBackgroundColor(Color.CYAN);
 
                     int width = LinearLayout.LayoutParams.WRAP_CONTENT;

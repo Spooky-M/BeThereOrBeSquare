@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.graphics.Color;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -51,7 +50,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS contacts");
+        db.execSQL("DROP TABLE IF EXISTS " + RECTANGLES_TABLE_NAME);
         onCreate(db);
         VERSION = newVersion;
     }
@@ -134,6 +133,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             contentValues.put(COLUMN_COLOR, r.getColor());
             db.insert(RECTANGLES_TABLE_NAME, null, contentValues);
         }
+    }
+
+    public void initNewTable() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("DROP TABLE IF EXISTS " + RECTANGLES_TABLE_NAME);
+        onCreate(db);
     }
 
 }
