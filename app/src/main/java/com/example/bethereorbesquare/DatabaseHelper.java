@@ -45,7 +45,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + RECTANGLES_TABLE_NAME +
                 "(" + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COLUMN_LEFT + " INTEGER, " + COLUMN_TOP + " INTEGER, " + COLUMN_RIGHT + " INTEGER, "
-                + COLUMN_BOTTOM + " INTEGER, " + COLUMN_COLOR + " INTEGER)");
+                + COLUMN_BOTTOM + " INTEGER, " + COLUMN_COLOR + " LONG)");
     }
 
     @Override
@@ -55,7 +55,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         VERSION = newVersion;
     }
 
-    public void insertRectangle(int left, int top, int right, int bottom, int color) {
+    public void insertRectangle(int left, int top, int right, int bottom, long color) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COLUMN_LEFT, left);
@@ -77,7 +77,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insert(RECTANGLES_TABLE_NAME, null, contentValues);
     }
 
-    public void updateRectangle(int id, int left, int top, int right, int bottom, int color) {
+    public void updateRectangle(int id, int left, int top, int right, int bottom, long color) {
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor res = db.rawQuery( "UPDATE " + RECTANGLES_TABLE_NAME +
                 " SET " + COLUMN_LEFT + "=" + left + ", " + COLUMN_TOP + "=" + top + ", " +

@@ -13,10 +13,10 @@ public class Rectangle implements Parcelable {
 
     private int id;
     private int left, top, right, bottom;
-    private int color;
+    private long color;
     private boolean isSelected;
 
-    public Rectangle(int left, int top, int right, int bottom, int color) {
+    public Rectangle(int left, int top, int right, int bottom, long color) {
         this.left = left;
         this.top = top;
         this.right = right;
@@ -56,7 +56,7 @@ public class Rectangle implements Parcelable {
         dest.writeInt(top);
         dest.writeInt(right);
         dest.writeInt(bottom);
-        dest.writeInt(color);
+        dest.writeLong(color);
         dest.writeByte((byte) (isSelected ? 1 : 0));
     }
 
@@ -107,7 +107,7 @@ public class Rectangle implements Parcelable {
         this.bottom = bottom;
     }
 
-    public int getColor() {
+    public long getColor() {
         return color;
     }
 

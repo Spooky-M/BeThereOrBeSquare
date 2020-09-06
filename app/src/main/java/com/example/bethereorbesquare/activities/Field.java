@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
@@ -11,6 +12,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import com.example.bethereorbesquare.DatabaseHelper;
 import com.example.bethereorbesquare.listeners.FieldListener;
@@ -140,6 +142,7 @@ public class Field extends Activity {
 //            });
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.Q)
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
@@ -153,6 +156,7 @@ public class Field extends Activity {
                 x = i * rectWidth;
                 y = j * rectHeight;
                 r.setDimensions(x, y, x + rectWidth, y + rectHeight);
+                dbHelper.updateRectangle(r);
 
                 paint.setColor(r.getColor());
                 canvas.drawRect(x, y, x + rectWidth, y + rectHeight, paint);
