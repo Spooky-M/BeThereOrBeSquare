@@ -34,24 +34,28 @@ public class Field extends Activity {
     private List<Rectangle> field;
     private List<FieldListener> listeners = new ArrayList<>();
 
+    private boolean continued = false;
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 //        setContentView(R.layout.activity_field);
 //        drawView = findViewById(R.id.draw_view);
 
-        Bundle extras = getIntent().getExtras();
-        assert extras != null;
-        Bundle dimensions = extras.getBundle("dimensions");
-        assert dimensions != null;
-        rows = dimensions.getInt("rows");
-        columns = dimensions.getInt("columns");
-        if (rows <= 0 || columns <= 0) throw new IllegalArgumentException();
-
-        if(dbHelper == null) {
-            dbHelper = new DatabaseHelper(this);
-            field = dbHelper.getAllRectangles();
-            if(field == null || field.isEmpty()) dbHelper.initRectanglesDatabase(rows*columns);
+        dbHelper = new DatabaseHelper(this);
+        field = dbHelper.getAllRectangles();
+        if(field != null && !field.isEmpty()) {
+            continued = true;
+        } else {
+            Bundle extras = getIntent().getExtras();
+            assert extras != null;
+            Bundle dimensions = extras.getBundle("dimensions");
+            assert dimensions != null;
+            rows = dimensions.getInt("rows");
+            columns = dimensions.getInt("columns");
+            if (rows <= 0 || columns <= 0) throw new IllegalArgumentException();
+            dbHelper.initRectanglesDatabase(rows*columns);
         }
 
         drawView = new DrawView(this);
@@ -65,13 +69,19 @@ public class Field extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        dbHelper.insertAllRectangles(field);
+        for(Rectangle r : field) {
+            dbHelper.updateRectangle(r);
+        }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onResume() {
         super.onResume();
         field = dbHelper.getAllRectangles();
+//        drawView.invalidate();
+//        drawView.requestLayout();
+//        fieldChanged();
     }
 
     @Override
@@ -99,8 +109,6 @@ public class Field extends Activity {
     public class DrawView extends View {
 
         private Paint paint = new Paint();
-        private int rectWidth = this.getWidth() / columns;
-        private int rectHeight = this.getHeight() / rows;
 
 //        private Button switchButton;
 
@@ -147,8 +155,16 @@ public class Field extends Activity {
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
 
-            rectWidth = getWidth() / columns;
-            rectHeight = getHeight() / rows;
+            if(continued) {
+                for(Rectangle r : field) {
+                    r.draw(canvas, paint);
+                }
+                continued = false;
+                return;
+            }
+
+            int rectWidth = getWidth() / columns;
+            int rectHeight = getHeight() / rows;
 
             int x, y;
             int i = 0, j = 0;
@@ -156,19 +172,10 @@ public class Field extends Activity {
                 x = i * rectWidth;
                 y = j * rectHeight;
                 r.setDimensions(x, y, x + rectWidth, y + rectHeight);
-                dbHelper.updateRectangle(r);
+                r.setIndex(j*columns + i);
 
                 paint.setColor(r.getColor());
-                canvas.drawRect(x, y, x + rectWidth, y + rectHeight, paint);
-
-                if(r.isSelected()) {
-                    paint.setStrokeWidth(10f);
-                    paint.setStyle(Paint.Style.STROKE);
-                    paint.setColor(0xFF005EFF);
-                    canvas.drawRect(x, y, x + rectWidth, y + rectHeight, paint);
-                    paint.setStyle(Paint.Style.FILL);
-                    paint.setStrokeWidth(1f);
-                }
+                r.draw(canvas, paint);
 
                 i++;
                 if (i == columns) {
@@ -181,8 +188,6 @@ public class Field extends Activity {
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-            rectWidth = getWidth() / columns;
-            rectHeight = getHeight() / rows;
         }
 
         @Override

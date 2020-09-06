@@ -15,7 +15,7 @@ public class Util {
         List<Rectangle> rectangles = new ArrayList<>(n);
 
         for(int i = 0; i < n; i++) {
-            rectangles.add(new Rectangle(0, 0, 0, 0,
+            rectangles.add(new Rectangle(i, 0, 0, 0, 0,
                     Color.rgb(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256))));
         }
         return rectangles;

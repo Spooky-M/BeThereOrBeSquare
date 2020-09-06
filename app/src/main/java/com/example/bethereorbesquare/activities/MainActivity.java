@@ -1,10 +1,12 @@
 package com.example.bethereorbesquare.activities;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -48,10 +50,11 @@ public class MainActivity extends AppCompatActivity {
         });
 
         continueButton.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
             @SuppressLint("InflateParams")
             @Override
             public void onClick(View v) {
-                if(dbHelper.getAllRectangles().isEmpty()) {
+                if(dbHelper == null || dbHelper.getAllRectangles().isEmpty()) {
                     LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
                     assert inflater != null;
                     popupView = inflater.inflate(R.layout.popup_window_error, null);
@@ -70,6 +73,8 @@ public class MainActivity extends AppCompatActivity {
                             return true;
                         }
                     });
+                } else {
+                    startActivity(new Intent(MainActivity.this, Field.class));
                 }
             }
         });
