@@ -40,8 +40,6 @@ public class Field extends Activity {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        setContentView(R.layout.activity_field);
-//        drawView = findViewById(R.id.draw_view);
 
         dbHelper = new DatabaseHelper(this);
         field = dbHelper.getAllRectangles();
