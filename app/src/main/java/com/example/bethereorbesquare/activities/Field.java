@@ -11,9 +11,6 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-
 import com.example.bethereorbesquare.DatabaseHelper;
 import com.example.bethereorbesquare.listeners.FieldListener;
 import com.example.bethereorbesquare.shapes.Rectangle;
@@ -21,6 +18,9 @@ import com.example.bethereorbesquare.shapes.Rectangle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 public class Field extends Activity {
 
@@ -55,6 +55,11 @@ public class Field extends Activity {
             if (rows <= 0 || columns <= 0) throw new IllegalArgumentException();
             dbHelper.initRectanglesDatabase(rows*columns);
         }
+
+        //TODO 6) Napravi prikaz grida koristeći RecyclerView (mora imat GridLayoutManager da bude grid)
+        // Primjer -> https://medium.com/@droidbyme/android-recyclerview-fca74609725e
+        // Dokumentacija -> https://developer.android.com/guide/topics/ui/layout/recyclerview
+        // Nemoj zaboravit dodat i redni broj u prikazu kvadratića
 
         drawView = new DrawView(this);
         drawView.setFocusableInTouchMode(true);

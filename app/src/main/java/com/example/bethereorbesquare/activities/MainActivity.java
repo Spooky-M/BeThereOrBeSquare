@@ -1,8 +1,5 @@
 package com.example.bethereorbesquare.activities;
 
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Color;
@@ -20,6 +17,9 @@ import android.widget.TextView;
 import com.example.bethereorbesquare.DatabaseHelper;
 import com.example.bethereorbesquare.R;
 
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+
 public class MainActivity extends AppCompatActivity {
 
     private DatabaseHelper dbHelper;
@@ -35,6 +35,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //TODO 1) Napraviti dohvat boja s interneta (npr. https://goo.gl/gEhgzs)
+        // stariji nacin -> https://medium.com/@JasonCromer/android-asynctask-http-request-tutorial-6b429d833e28
+        // napredniji nacin -> https://medium.com/@jacinth9/android-retrofit-2-0-tutorial-89de3c714c63, dokumentacija za retrofit2:  https://square.github.io/retrofit/
+
+        //TODO 2) Prilikom dohvaćanja boja onemogući prikaz buttona, stavi loading progress (npr ProgressBar) dok se dohvaća s backenda, kada dobiješ rezultate prikaži buttone
+        //TODO 3) Napravi spremanje boja u lokalnu bazu kako bi izbjegao dohvaćanje boja pri svakom pokretanju aplikacije
+        // dodatno za vježbu možeš napravit neku vrstu keshiranja da se nakon svakih 10 min dohvate nove boje
+
         title = findViewById(R.id.title);
         startButton = findViewById(R.id.start_button);
         continueButton = findViewById(R.id.continue_button);
@@ -44,7 +52,11 @@ public class MainActivity extends AppCompatActivity {
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dbHelper.initNewTable();
+                //TODO 5) Pošto NewField služi samo za unos stupaca i redaka, probaj ga izdvojit u AlertDialog i podesit postavljanje parametara unutar dialoga
+                // primjer -> https://medium.com/@suragch/creating-a-custom-alertdialog-bae919d2efa5
+                // hint: u viewu za unos texta (EditText) možeš postavit da želiš samo brojeve (android:inputType="number")
+
+                dbHelper.initNewTable(); // inicializiraj novu tablicu tek kad korisnik unese i potvrdi parametre, u ovoj situaciji korisnik može odustat i vratit se back tipkom a nema spremljenu tablicu jer si dropnuo tablicu
                 startActivity(new Intent(MainActivity.this, NewField.class));
             }
         });
@@ -55,6 +67,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if(dbHelper == null || dbHelper.getAllRectangles().isEmpty()) {
+                    //TODO 4) Zamjeni popup sa AlertDialog prikazom
+                    // primjer -> https://medium.com/@suragch/making-an-alertdialog-in-android-2045381e2edb
+
                     LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
                     assert inflater != null;
                     popupView = inflater.inflate(R.layout.popup_window_error, null);
