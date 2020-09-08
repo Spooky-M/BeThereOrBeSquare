@@ -1,4 +1,4 @@
-package com.example.bethereorbesquare.activities;
+package com.example.bethereorbesquare.activity;
 
 import android.app.Activity;
 import android.content.Context;
@@ -11,7 +11,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.example.bethereorbesquare.DatabaseHelper;
+import com.example.bethereorbesquare.service.DatabaseHelper;
 import com.example.bethereorbesquare.listeners.FieldListener;
 import com.example.bethereorbesquare.shapes.Rectangle;
 

@@ -80,24 +80,44 @@ public class Rectangle implements Parcelable {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
     }
 
     public int getLeft() {
         return left;
     }
 
+    public void setLeft(int left) {
+        this.left = left;
+    }
+
     public int getTop() {
         return top;
+    }
+
+    public void setTop(int top) {
+        this.top = top;
     }
 
     public int getRight() {
         return right;
     }
 
+    public void setRight(int right) {
+        this.right = right;
+    }
+
     public int getBottom() {
         return bottom;
+    }
+
+    public void setBottom(int bottom) {
+        this.bottom = bottom;
     }
 
     public int getColor() {
@@ -114,14 +134,6 @@ public class Rectangle implements Parcelable {
 
     public void setSelected(boolean selected) {
         isSelected = selected;
-    }
-
-    public int getIndex() {
-        return index;
-    }
-
-    public void setIndex(int index) {
-        this.index = index;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.Q)

@@ -1,4 +1,4 @@
-package com.example.bethereorbesquare.activities;
+package com.example.bethereorbesquare.activity;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
@@ -14,7 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
-import com.example.bethereorbesquare.DatabaseHelper;
+import com.example.bethereorbesquare.service.DatabaseHelper;
 import com.example.bethereorbesquare.R;
 
 import androidx.annotation.RequiresApi;

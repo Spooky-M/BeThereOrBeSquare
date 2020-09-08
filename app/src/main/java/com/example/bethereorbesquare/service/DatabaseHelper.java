@@ -1,4 +1,4 @@
-package com.example.bethereorbesquare;
+package com.example.bethereorbesquare.service;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.example.bethereorbesquare.Util;
 import com.example.bethereorbesquare.shapes.Rectangle;
 
 import java.util.ArrayList;
