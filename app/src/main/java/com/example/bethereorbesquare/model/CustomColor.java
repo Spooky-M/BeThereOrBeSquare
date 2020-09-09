@@ -3,10 +3,13 @@ package com.example.bethereorbesquare.model;
 import com.google.gson.annotations.SerializedName;
 
 public class CustomColor {
+
     @SerializedName("hex")
     private String hex;
+
     @SerializedName("name")
     private String name;
+
     @SerializedName("rgb")
     private String rgb;
 

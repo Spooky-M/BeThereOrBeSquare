@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Random;
 
 public class Util {
-
     public static List<Rectangle> makeRectangles(int n) {
         Random rand = new Random();
         List<Rectangle> rectangles = new ArrayList<>(n);

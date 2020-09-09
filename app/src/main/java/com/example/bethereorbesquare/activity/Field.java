@@ -82,9 +82,6 @@ public class Field extends Activity {
     protected void onResume() {
         super.onResume();
         field = dbHelper.getAllRectangles();
-//        drawView.invalidate();
-//        drawView.requestLayout();
-//        fieldChanged();
     }
 
     @Override

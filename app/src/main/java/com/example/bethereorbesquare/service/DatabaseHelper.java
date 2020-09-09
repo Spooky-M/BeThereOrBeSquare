@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.example.bethereorbesquare.Util;
+import com.example.bethereorbesquare.model.CustomColor;
 import com.example.bethereorbesquare.shapes.Rectangle;
 
 import java.util.ArrayList;
@@ -30,6 +31,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_RIGHT = "right_coord";
     public static final String COLUMN_BOTTOM = "bottom_coord";
     public static final String COLUMN_COLOR = "color";
+
+    public static final String COLORS_TABLE_NAME = "ColorsTable";
+    public static final String COLUMN_HEX = "hex";
+    public static final String COLUMN_NAME = "name";
+    public static final String COLUMN_RGB = "rgb";
 
     public static int VERSION = 1;
 
@@ -52,11 +58,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + COLUMN_INDEX + " INTEGER UNIQUE, " + COLUMN_LEFT + " INTEGER, "
                 + COLUMN_TOP + " INTEGER, " + COLUMN_RIGHT + " INTEGER, "
                 + COLUMN_BOTTOM + " INTEGER, " + COLUMN_COLOR + " INTEGER)");
+
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + COLORS_TABLE_NAME +
+                "(" + COLUMN_HEX + " TEXT, " + COLUMN_NAME + " TEXT PRIMARY KEY, " + COLUMN_RGB + " TEXT)");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + RECTANGLES_TABLE_NAME);
         onCreate(db);
         VERSION = newVersion;
     }
@@ -98,7 +106,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         updateRectangle(r.getId(), r.getIndex(), r.getLeft(), r.getTop(), r.getRight(), r.getBottom(), r.getColor());
     }
 
-    public Cursor getRectangle(int id) {
+    public Cursor getRectangleById(int id) {
         SQLiteDatabase db = getReadableDatabase();
         return db.rawQuery("SELECT * FROM " + RECTANGLES_TABLE_NAME +
                 " WHERE " + COLUMN_ID + "=" + id, null);
@@ -160,10 +168,54 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    public void initNewTable() {
+    public void initNewRectanglesTable() {
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("DROP TABLE IF EXISTS " + RECTANGLES_TABLE_NAME);
         onCreate(db);
     }
 
+    public void insertAllColors(List<CustomColor> colors) {
+        for(CustomColor c : colors) insertColor(c);
+    }
+
+    public void insertColor(CustomColor c) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COLUMN_HEX, c.getHex());
+        contentValues.put(COLUMN_NAME, c.getName());
+        contentValues.put(COLUMN_RGB, c.getRgb());
+        db.insert(COLORS_TABLE_NAME, null, contentValues);
+    }
+
+    public Cursor getColorByName(String name) {
+        return getReadableDatabase().rawQuery("SELECT * FROM " + COLORS_TABLE_NAME +
+                " WHERE " + COLUMN_NAME + "=" + name, null);
+    }
+
+    public List<CustomColor> getAllColors() {
+        List<CustomColor> list = new ArrayList<>();
+
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor res =  db.rawQuery( "SELECT * FROM " + COLORS_TABLE_NAME, null);
+        res.moveToFirst();
+
+        int hex = res.getColumnIndex(COLUMN_HEX), name = res.getColumnIndex(COLUMN_NAME),
+                rgb = res.getColumnIndex(COLUMN_RGB);
+
+        CustomColor c;
+        while(!res.isAfterLast()){
+            c = new CustomColor(res.getString(hex), res.getString(name), res.getString(rgb));
+            list.add(c);
+            res.moveToNext();
+        }
+        res.close();
+
+        return list;
+    }
+
+    public void initNewColorsTable() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("DROP TABLE IF EXISTS " + COLORS_TABLE_NAME);
+        onCreate(db);
+    }
 }
