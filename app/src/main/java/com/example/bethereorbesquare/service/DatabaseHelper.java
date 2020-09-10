@@ -26,11 +26,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String RECTANGLES_TABLE_NAME = "FieldTable";
     public static final String COLUMN_ID = "id";
     public static final String COLUMN_INDEX = "list_index";
-    public static final String COLUMN_LEFT = "left_coord";
-    public static final String COLUMN_TOP = "top_coord";
-    public static final String COLUMN_RIGHT = "right_coord";
-    public static final String COLUMN_BOTTOM = "bottom_coord";
-    public static final String COLUMN_COLOR = "color";
+    public static final String COLUMN_SELECTED = "selected";
 
     public static final String COLORS_TABLE_NAME = "ColorsTable";
     public static final String COLUMN_HEX = "hex";
@@ -55,9 +51,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + RECTANGLES_TABLE_NAME +
                 "(" + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + COLUMN_INDEX + " INTEGER UNIQUE, " + COLUMN_LEFT + " INTEGER, "
-                + COLUMN_TOP + " INTEGER, " + COLUMN_RIGHT + " INTEGER, "
-                + COLUMN_BOTTOM + " INTEGER, " + COLUMN_COLOR + " INTEGER)");
+                + COLUMN_INDEX + " INTEGER UNIQUE, " + COLUMN_NAME + " TEXT UNIQUE, " + COLUMN_SELECTED + " BOOLEAN)");
 
         db.execSQL("CREATE TABLE IF NOT EXISTS " + COLORS_TABLE_NAME +
                 "(" + COLUMN_HEX + " TEXT, " + COLUMN_NAME + " TEXT PRIMARY KEY, " + COLUMN_RGB + " TEXT)");
@@ -69,41 +63,30 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         VERSION = newVersion;
     }
 
-    public void insertRectangle(int id, int index, int left, int top, int right, int bottom, long color) {
+    public void insertRectangle(Rectangle r) {
+        insertRectangle(r.getId(), r.getColor().getName(), r.isSelected());
+    }
+
+    public void insertRectangle(int index, String name, boolean selected) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COLUMN_INDEX, index);
-        contentValues.put(COLUMN_LEFT, left);
-        contentValues.put(COLUMN_TOP, top);
-        contentValues.put(COLUMN_RIGHT, right);
-        contentValues.put(COLUMN_BOTTOM, bottom);
-        contentValues.put(COLUMN_COLOR, color);
+        contentValues.put(COLUMN_NAME, name);
+        contentValues.put(COLUMN_SELECTED, selected);
         db.insert(RECTANGLES_TABLE_NAME, null, contentValues);
     }
 
-    public void insertRectangle(Rectangle r) {
+    public void updateRectangle(int id, int index, String colorName, boolean isSelected) {
         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(COLUMN_INDEX, r.getIndex());
-        contentValues.put(COLUMN_LEFT, r.getLeft());
-        contentValues.put(COLUMN_TOP, r.getTop());
-        contentValues.put(COLUMN_RIGHT, r.getRight());
-        contentValues.put(COLUMN_BOTTOM, r.getBottom());
-        contentValues.put(COLUMN_COLOR, r.getColor());
-        db.insert(RECTANGLES_TABLE_NAME, null, contentValues);
-    }
-
-    public void updateRectangle(int id, int index, int left, int top, int right, int bottom, int color) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        Cursor res = db.rawQuery( "UPDATE " + RECTANGLES_TABLE_NAME +
-                " SET " + COLUMN_INDEX + "=" + index + ", " + COLUMN_LEFT + "=" + left + ", " + COLUMN_TOP + "=" + top + ", " +
-                COLUMN_RIGHT + "=" + right + ", " + COLUMN_BOTTOM + "=" + bottom + ", " +
-                COLUMN_COLOR + "=" + color + " WHERE " + COLUMN_ID + "=" + id, null);
+        Cursor res = db.rawQuery( "UPDATE " + RECTANGLES_TABLE_NAME + " SET "
+                + COLUMN_INDEX + "=" + index + ", " + COLUMN_NAME + "=" + colorName + ", "
+                + COLUMN_SELECTED + "=" + isSelected + ", " + " WHERE " + COLUMN_ID + "=" + id,
+                null);
         res.close();
     }
 
     public void updateRectangle(Rectangle r) {
-        updateRectangle(r.getId(), r.getIndex(), r.getLeft(), r.getTop(), r.getRight(), r.getBottom(), r.getColor());
+        updateRectangle(r.getId(), r.getIndex(), r.getColor().getName(), r.isSelected());
     }
 
     public Cursor getRectangleById(int id) {
@@ -114,7 +97,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public void insertAllRectangles(@NonNull List<Rectangle> rectangles) {
         for(Rectangle r : rectangles) {
-            insertRectangle(r.getId(), r.getIndex(), r.getLeft(), r.getTop(), r.getRight(), r.getBottom(), r.getColor());
+            insertRectangle(r.getIndex(), r.getColor().getName(), r.isSelected());
         }
     }
 
@@ -126,19 +109,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor res =  db.rawQuery( "SELECT * FROM " + RECTANGLES_TABLE_NAME, null);
         res.moveToFirst();
 
-        int left_index = res.getColumnIndex(COLUMN_LEFT),
-                top_index = res.getColumnIndex(COLUMN_TOP),
-                right_index = res.getColumnIndex(COLUMN_RIGHT),
-                bottom_index = res.getColumnIndex(COLUMN_BOTTOM),
-                color_index = res.getColumnIndex(COLUMN_COLOR),
-                index_index = res.getColumnIndex(COLUMN_INDEX),
-                id_index = res.getColumnIndex(COLUMN_ID);
+        int idIndex = res.getColumnIndex(COLUMN_ID),
+                indexIndex = res.getColumnIndex(COLUMN_INDEX),
+                colorNameIndex = res.getColumnIndex(COLUMN_NAME),
+                selectedIndex = res.getColumnIndex(COLUMN_SELECTED);
 
         Rectangle r;
+        String colorName;
+        Cursor res2;
+        CustomColor cur;
+        boolean selected;
         while(!res.isAfterLast()){
-            r = new Rectangle(res.getInt(id_index), res.getInt(index_index),
-                    res.getInt(left_index), res.getInt(top_index), res.getInt(right_index),
-                    res.getInt(bottom_index), res.getInt(color_index));
+            colorName = res.getString(colorNameIndex);
+            res2 = db.rawQuery("SELECT * FROM " + COLORS_TABLE_NAME +
+                    " WHERE " + COLUMN_NAME + "=" + colorName, null);
+            res2.moveToFirst();
+            cur = new CustomColor(res2.getString(res2.getColumnIndex(COLUMN_HEX)),
+                    res2.getString(res2.getColumnIndex(COLUMN_NAME)),
+                    res2.getString(res2.getColumnIndex(COLUMN_RGB)));
+            res2.close();
+
+            selected = res.getInt(selectedIndex) != 0;
+            r = new Rectangle(res.getInt(idIndex), res.getInt(indexIndex), cur, selected);
             list.add(r);
             res.moveToNext();
         }
@@ -153,17 +145,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return list;
     }
 
-    public void initRectanglesDatabase(int n) {
+    public void initRectanglesDatabase(List<CustomColor> colors) {
         SQLiteDatabase db = this.getWritableDatabase();
-        List<Rectangle> rectangles = Util.makeRectangles(n);
+        List<Rectangle> rectangles = Util.makeRectangles(colors);
         for(Rectangle r : rectangles) {
             ContentValues contentValues = new ContentValues();
             contentValues.put(COLUMN_INDEX, r.getIndex());
-            contentValues.put(COLUMN_LEFT, r.getLeft());
-            contentValues.put(COLUMN_TOP, r.getTop());
-            contentValues.put(COLUMN_RIGHT, r.getRight());
-            contentValues.put(COLUMN_BOTTOM, r.getBottom());
-            contentValues.put(COLUMN_COLOR, r.getColor());
+            contentValues.put(COLUMN_NAME, r.getColor().getName());
+            contentValues.put(COLUMN_SELECTED, r.isSelected());
             db.insert(RECTANGLES_TABLE_NAME, null, contentValues);
         }
     }
