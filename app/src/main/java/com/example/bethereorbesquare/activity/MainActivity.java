@@ -27,8 +27,12 @@ import com.example.bethereorbesquare.network.GetColorService;
 import com.example.bethereorbesquare.network.RetrofitInstance;
 import com.example.bethereorbesquare.service.DatabaseHelper;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -59,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
         // dodatno za vježbu možeš napravit neku vrstu keshiranja da se nakon svakih 10 min dohvate nove boje
 
         dbHelper = new DatabaseHelper(this);
+
         colors = dbHelper.getAllColors();
         if(colors == null || colors.isEmpty()) {
             fetchColors();
@@ -129,20 +134,24 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<CustomColorList> call, Response<CustomColorList> response) {
                 colors = response.body().getColorsList();
+                dbHelper.initNewColorsTable();
+                dbHelper.insertAllColors(colors);
+
+                startButton.setEnabled(true);
+                continueButton.setEnabled(true);
+                progressBar.setVisibility(View.INVISIBLE);
+
             }
 
             @Override
             public void onFailure(Call<CustomColorList> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Something went wrong...Please try later!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Something went wrong...Please try later!", Toast.LENGTH_LONG).show();
+
+                startButton.setEnabled(true);
+                continueButton.setEnabled(true);
+                progressBar.setVisibility(View.INVISIBLE);
             }
 
         });
-
-        dbHelper.initNewColorsTable();
-        dbHelper.insertAllColors(colors);
-
-        startButton.setEnabled(true);
-        continueButton.setEnabled(true);
-        progressBar.setVisibility(View.INVISIBLE);
     }
 }

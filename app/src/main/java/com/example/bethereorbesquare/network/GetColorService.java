@@ -6,6 +6,6 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 
 public interface GetColorService {
-    @GET("colors.php")
+    @GET("/")
     Call<CustomColorList> getColorData();
 }

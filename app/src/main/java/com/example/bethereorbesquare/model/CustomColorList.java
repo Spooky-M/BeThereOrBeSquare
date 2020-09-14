@@ -5,7 +5,8 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 public class CustomColorList {
-    @SerializedName("colorsList")
+
+    @SerializedName("Colors")
     private List<CustomColor> colorsList;
 
     public List<CustomColor> getColorsList() {
