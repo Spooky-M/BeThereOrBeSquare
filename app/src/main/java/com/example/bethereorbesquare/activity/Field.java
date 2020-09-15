@@ -1,9 +1,12 @@
 package com.example.bethereorbesquare.activity;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 
@@ -36,8 +39,6 @@ public class Field extends Activity {
     private List<Rectangle> field;
     private List<FieldListener> listeners = new ArrayList<>();
 
-    private boolean continued = false;
-
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -47,10 +48,10 @@ public class Field extends Activity {
         switchButton = findViewById(R.id.switch_button);
 
         dbHelper = new DatabaseHelper(this);
-        field = dbHelper.getAllRectangles();
-        if(field != null && !field.isEmpty()) {
-            continued = true;
-        } else {
+        SharedPreferences preferences = getSharedPreferences(MainActivity.CONTINUE_PREFERENCES, Context.MODE_PRIVATE);
+        boolean cont = preferences.getBoolean(MainActivity.CONTINUE_KEY, false);
+
+        if(!cont) {
             Bundle extras = getIntent().getExtras();
             assert extras != null;
             Bundle dimensions = extras.getBundle("dimensions");

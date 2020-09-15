@@ -60,6 +60,8 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
         }
 
         public void setDetails(Rectangle r) {
+//            Random rand = new Random();
+//            rectangleView.setBackgroundColor(rand.nextInt(256));
             rectangleView.setBackgroundColor(Color.parseColor(r.getColor().getHex()));
             rectangleView.setText(r.getIndex());
 

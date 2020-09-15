@@ -1,8 +1,10 @@
 package com.example.bethereorbesquare.activity;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -38,6 +40,9 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final String CONTINUE_PREFERENCES = "continue_preferences";
+    public static final String CONTINUE_KEY = "continue";
+
     private DatabaseHelper dbHelper;
     private List<CustomColor> colors;
 
@@ -68,6 +73,9 @@ public class MainActivity extends AppCompatActivity {
             fetchColors();
         }
 
+        SharedPreferences preferences = getSharedPreferences(CONTINUE_PREFERENCES, Context.MODE_PRIVATE);
+        final SharedPreferences.Editor editor = preferences.edit();
+
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
@@ -89,16 +97,27 @@ public class MainActivity extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int which) {    // add a button
                         // read data and send it from the AlertDialog to the Activity
                         int rows, columns;
-                        rows = Integer.parseInt(String.valueOf(inputFieldRows.getText()));
-                        columns = Integer.parseInt(String.valueOf(inputFieldColumns.getText()));
+                        try {
+                            rows = Integer.parseInt(String.valueOf(inputFieldRows.getText()));
+                            columns = Integer.parseInt(String.valueOf(inputFieldColumns.getText()));
+                            if(rows <= 0 || columns <= 0) throw new IllegalArgumentException();
+                        } catch (IllegalArgumentException e) {
+                            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                            builder.setTitle("Error");
+                            builder.setMessage("Values for rows and columns need to be positive.");
+                            builder.setPositiveButton("OK", null);
+                            AlertDialog d = builder.create();
+                            d.show();
+                            return;
+                        }
 
-                        if(rows <= 0 || columns <= 0) throw new IllegalArgumentException();
+                        dbHelper.initNewRectanglesTable(); // inicializiraj novu tablicu tek kad korisnik unese i potvrdi parametre
+                        editor.putBoolean(CONTINUE_KEY, false);
+                        editor.apply();
 
                         Bundle dimensions = new Bundle();
                         dimensions.putInt("rows", rows);
                         dimensions.putInt("columns", columns);
-
-                        dbHelper.initNewRectanglesTable(); // inicializiraj novu tablicu tek kad korisnik unese i potvrdi parametre
 
                         Intent intent = new Intent(MainActivity.this, Field.class);
                         intent.putExtra("dimensions", dimensions);
@@ -121,11 +140,13 @@ public class MainActivity extends AppCompatActivity {
 
                     AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                     builder.setTitle("Error");
-                    builder.setMessage("Something went wrong while initiating database...");
+                    builder.setMessage("There's no saved state. Create a new field by clicking \"Start\".");
                     builder.setPositiveButton("OK", null);
                     AlertDialog dialog = builder.create();
                     dialog.show();
                 } else {
+                    editor.putBoolean(CONTINUE_KEY, true);
+                    editor.apply();
                     startActivity(new Intent(MainActivity.this, Field.class));
                 }
             }
