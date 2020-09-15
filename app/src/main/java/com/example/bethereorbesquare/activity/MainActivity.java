@@ -1,6 +1,7 @@
 package com.example.bethereorbesquare.activity;
 
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
@@ -18,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.bethereorbesquare.R;
@@ -26,13 +28,10 @@ import com.example.bethereorbesquare.model.CustomColorList;
 import com.example.bethereorbesquare.network.GetColorService;
 import com.example.bethereorbesquare.network.RetrofitInstance;
 import com.example.bethereorbesquare.service.DatabaseHelper;
+import com.google.android.material.textfield.TextInputEditText;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -71,13 +70,43 @@ public class MainActivity extends AppCompatActivity {
 
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(final View v) {
                 //TODO 5) Pošto NewField služi samo za unos stupaca i redaka, probaj ga izdvojit u AlertDialog i podesit postavljanje parametara unutar dialoga
                 // primjer -> https://medium.com/@suragch/creating-a-custom-alertdialog-bae919d2efa5
                 // hint: u viewu za unos texta (EditText) možeš postavit da želiš samo brojeve (android:inputType="number")
 
-                dbHelper.initNewRectanglesTable(); // inicializiraj novu tablicu tek kad korisnik unese i potvrdi parametre, u ovoj situaciji korisnik može odustat i vratit se back tipkom a nema spremljenu tablicu jer si dropnuo tablicu
-                startActivity(new Intent(MainActivity.this, NewField.class));
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("New Field");
+                final View customLayout = getLayoutInflater().inflate(R.layout.activity_newfield, null);
+                builder.setView(customLayout); // set the custom layout
+
+                final TextInputEditText inputFieldRows = customLayout.findViewById(R.id.editTextRows);
+                final TextInputEditText inputFieldColumns = customLayout.findViewById(R.id.editTextColumns);
+
+                builder.setPositiveButton("Next", new DialogInterface.OnClickListener() {
+                    @SuppressLint("InflateParams")
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {    // add a button
+                        // read data and send it from the AlertDialog to the Activity
+                        int rows, columns;
+                        rows = Integer.parseInt(String.valueOf(inputFieldRows.getText()));
+                        columns = Integer.parseInt(String.valueOf(inputFieldColumns.getText()));
+
+                        if(rows <= 0 || columns <= 0) throw new IllegalArgumentException();
+
+                        Bundle dimensions = new Bundle();
+                        dimensions.putInt("rows", rows);
+                        dimensions.putInt("columns", columns);
+
+                        dbHelper.initNewRectanglesTable(); // inicializiraj novu tablicu tek kad korisnik unese i potvrdi parametre
+
+                        Intent intent = new Intent(MainActivity.this, Field.class);
+                        intent.putExtra("dimensions", dimensions);
+                        startActivity(intent);
+                    }
+                });        // create and show the alert dialog
+                AlertDialog dialog = builder.create();
+                dialog.show();
             }
         });
 
@@ -90,24 +119,12 @@ public class MainActivity extends AppCompatActivity {
                     //TODO 4) Zamjeni popup sa AlertDialog prikazom
                     // primjer -> https://medium.com/@suragch/making-an-alertdialog-in-android-2045381e2edb
 
-                    LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-                    assert inflater != null;
-                    popupView = inflater.inflate(R.layout.popup_window_error, null);
-                    popupView.setBackgroundColor(Color.CYAN);
-
-                    int width = LinearLayout.LayoutParams.WRAP_CONTENT;
-                    int height = LinearLayout.LayoutParams.WRAP_CONTENT;
-                    popupWindow = new PopupWindow(popupView, width, height, true);
-                    popupWindow.showAtLocation(v, Gravity.CENTER, 0, 0);
-
-                    popupView.setOnTouchListener(new View.OnTouchListener() {
-                        @SuppressLint("ClickableViewAccessibility")
-                        @Override
-                        public boolean onTouch(View v, MotionEvent event) {
-                            popupWindow.dismiss();
-                            return true;
-                        }
-                    });
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    builder.setTitle("Error");
+                    builder.setMessage("Something went wrong while initiating database...");
+                    builder.setPositiveButton("OK", null);
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
                 } else {
                     startActivity(new Intent(MainActivity.this, Field.class));
                 }
