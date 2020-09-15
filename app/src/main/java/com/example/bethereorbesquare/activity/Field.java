@@ -42,7 +42,7 @@ public class Field extends Activity {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_newfield);
+        setContentView(R.layout.activity_field);
         recyclerView = findViewById(R.id.recycler_view);
         switchButton = findViewById(R.id.switch_button);
 
@@ -66,10 +66,10 @@ public class Field extends Activity {
         // Dokumentacija -> https://developer.android.com/guide/topics/ui/layout/recyclerview
         // Nemoj zaboravit dodat i redni broj u prikazu kvadratića
 
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new GridLayoutManager(this, columns));
         fieldAdapter = new FieldAdapter(this, field);
         recyclerView.setAdapter(fieldAdapter);
+        recyclerView.setLayoutManager(new GridLayoutManager(this, columns));
+        recyclerView.setHasFixedSize(true);
 
         switchButton.setOnClickListener(new View.OnClickListener() {
             @Override
