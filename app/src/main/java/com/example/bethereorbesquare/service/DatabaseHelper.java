@@ -63,9 +63,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         VERSION = newVersion;
     }
 
-    public void insertRectangle(Rectangle r) {
-        insertRectangle(r.getId(), r.getColor().getName(), r.isSelected());
-    }
 
     public void insertRectangle(int index, String name, boolean selected) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -76,7 +73,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insert(RECTANGLES_TABLE_NAME, null, contentValues);
     }
 
-    public void updateRectangle(int id, int index, String colorName, boolean isSelected) {
+    public void insertRectangle(Rectangle r) {
+        insertRectangle(r.getIndex(), r.getColor().getName(), r.isSelected());
+    }
+
+    public void updateRectangle(long id, int index, String colorName, boolean isSelected) {
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor res = db.rawQuery("UPDATE " + RECTANGLES_TABLE_NAME + " SET "
                 + COLUMN_INDEX + "=" + index + ", " + COLUMN_COLOR_NAME + "='" + colorName + "', "

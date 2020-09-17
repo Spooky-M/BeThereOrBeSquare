@@ -5,12 +5,12 @@ import com.example.bethereorbesquare.model.CustomColor;
 
 public class Rectangle {
 
-    private int id = -1;
+    private long id = -1;
     private int index;
     private CustomColor color;
     private boolean selected = false;
 
-    public Rectangle(int id, int index, CustomColor color, boolean selected) {
+    public Rectangle(long id, int index, CustomColor color, boolean selected) {
         this.id = id;
         this.index = index;
         this.color = color;
@@ -46,11 +46,11 @@ public class Rectangle {
         this.selected = selected;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 }
