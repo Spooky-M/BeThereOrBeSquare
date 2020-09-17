@@ -6,14 +6,14 @@ import java.util.List;
 
 public class CustomColorList {
 
-    @SerializedName("Colors")
-    private List<CustomColor> colorsList;
+    @SerializedName("colors")
+    private List<CustomColor> colors;
 
     public List<CustomColor> getColorsList() {
-        return colorsList;
+        return colors;
     }
 
-    public void setColorsList(List<CustomColor> colorsList) {
-        this.colorsList = colorsList;
+    public void setColorsList(List<CustomColor> colors) {
+        this.colors = colors;
     }
 }

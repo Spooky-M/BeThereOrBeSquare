@@ -30,7 +30,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String COLORS_TABLE_NAME = "ColorsTable";
     public static final String COLUMN_HEX = "hex";
-    public static final String COLUMN_NAME = "name";
+    public static final String COLUMN_COLOR_NAME = "color_name";
     public static final String COLUMN_RGB = "rgb";
 
     public static int VERSION = 1;
@@ -51,10 +51,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + RECTANGLES_TABLE_NAME +
                 "(" + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + COLUMN_INDEX + " INTEGER UNIQUE, " + COLUMN_NAME + " TEXT UNIQUE, " + COLUMN_SELECTED + " BOOLEAN)");
+                + COLUMN_INDEX + " INTEGER UNIQUE, " + COLUMN_COLOR_NAME + " TEXT UNIQUE, " + COLUMN_SELECTED + " INTEGER)");
 
         db.execSQL("CREATE TABLE IF NOT EXISTS " + COLORS_TABLE_NAME +
-                "(" + COLUMN_HEX + " TEXT, " + COLUMN_NAME + " TEXT PRIMARY KEY, " + COLUMN_RGB + " TEXT)");
+                "(" + COLUMN_HEX + " TEXT, " + COLUMN_COLOR_NAME + " TEXT PRIMARY KEY, " + COLUMN_RGB + " INTEGER)");
     }
 
     @Override
@@ -71,16 +71,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COLUMN_INDEX, index);
-        contentValues.put(COLUMN_NAME, name);
+        contentValues.put(COLUMN_COLOR_NAME, name);
         contentValues.put(COLUMN_SELECTED, selected);
         db.insert(RECTANGLES_TABLE_NAME, null, contentValues);
     }
 
     public void updateRectangle(int id, int index, String colorName, boolean isSelected) {
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor res = db.rawQuery( "UPDATE " + RECTANGLES_TABLE_NAME + " SET "
-                + COLUMN_INDEX + "=" + index + ", " + COLUMN_NAME + "=" + colorName + ", "
-                + COLUMN_SELECTED + "=" + isSelected + ", " + " WHERE " + COLUMN_ID + "=" + id,
+        Cursor res = db.rawQuery("UPDATE " + RECTANGLES_TABLE_NAME + " SET "
+                + COLUMN_INDEX + "=" + index + ", " + COLUMN_COLOR_NAME + "='" + colorName + "', "
+                + COLUMN_SELECTED + "=" + (isSelected ? 1 : 0) + ", " + " WHERE " + COLUMN_ID + "=" + id,
                 null);
         res.close();
     }
@@ -111,7 +111,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         int idIndex = res.getColumnIndex(COLUMN_ID),
                 indexIndex = res.getColumnIndex(COLUMN_INDEX),
-                colorNameIndex = res.getColumnIndex(COLUMN_NAME),
+                colorNameIndex = res.getColumnIndex(COLUMN_COLOR_NAME),
                 selectedIndex = res.getColumnIndex(COLUMN_SELECTED);
 
         Rectangle r;
@@ -122,10 +122,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         while(!res.isAfterLast()){
             colorName = res.getString(colorNameIndex);
             res2 = db.rawQuery("SELECT * FROM " + COLORS_TABLE_NAME +
-                    " WHERE " + COLUMN_NAME + "=" + colorName, null);
+                    " WHERE " + COLUMN_COLOR_NAME + "='" + colorName + "'", null);
             res2.moveToFirst();
             cur = new CustomColor(res2.getString(res2.getColumnIndex(COLUMN_HEX)),
-                    res2.getString(res2.getColumnIndex(COLUMN_NAME)),
+                    res2.getString(res2.getColumnIndex(COLUMN_COLOR_NAME)),
                     res2.getString(res2.getColumnIndex(COLUMN_RGB)));
             res2.close();
 
@@ -145,16 +145,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return list;
     }
 
-    public void initRectanglesDatabase(List<CustomColor> colors) {
+    public void fillRectanglesDatabase(List<CustomColor> colors) {
         SQLiteDatabase db = this.getWritableDatabase();
         List<Rectangle> rectangles = Util.makeRectangles(colors);
+        Cursor cursor = null;
         for(Rectangle r : rectangles) {
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(COLUMN_INDEX, r.getIndex());
-            contentValues.put(COLUMN_NAME, r.getColor().getName());
-            contentValues.put(COLUMN_SELECTED, r.isSelected());
-            db.insert(RECTANGLES_TABLE_NAME, null, contentValues);
+            cursor = db.rawQuery("INSERT INTO " + RECTANGLES_TABLE_NAME +
+                    " (" + COLUMN_INDEX + ", " + COLUMN_COLOR_NAME + ", "  + COLUMN_SELECTED + ")"
+                    + " VALUES (" + r.getIndex() + ", '"  + r.getColor().getName() + "', "
+                    + (r.isSelected() ? 1 : 0) + ")" ,
+                    null);
         }
+        if(cursor != null) cursor.close();
     }
 
     public void initNewRectanglesTable() {
@@ -168,17 +170,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public void insertColor(CustomColor c) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(COLUMN_HEX, c.getHex());
-        contentValues.put(COLUMN_NAME, c.getName());
-        contentValues.put(COLUMN_RGB, c.getRgb());
-        db.insert(COLORS_TABLE_NAME, null, contentValues);
+        SQLiteDatabase db = getWritableDatabase();
+        Cursor cursor = db.rawQuery("INSERT INTO " + COLORS_TABLE_NAME +
+                        " (" + COLUMN_HEX + ", " + COLUMN_COLOR_NAME + ", "  + COLUMN_RGB + ")"
+                        + " VALUES ('" + c.getHex() + "', '"  + c.getName() + "', "
+                        + c.getRgbInt() + ")" ,
+                null);
+        cursor.close();
     }
 
     public Cursor getColorByName(String name) {
         return getReadableDatabase().rawQuery("SELECT * FROM " + COLORS_TABLE_NAME +
-                " WHERE " + COLUMN_NAME + "=" + name, null);
+                " WHERE " + COLUMN_COLOR_NAME + "='" + name + "'", null);
     }
 
     public List<CustomColor> getAllColors() {
@@ -188,7 +191,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor res =  db.rawQuery( "SELECT * FROM " + COLORS_TABLE_NAME, null);
         res.moveToFirst();
 
-        int hex = res.getColumnIndex(COLUMN_HEX), name = res.getColumnIndex(COLUMN_NAME),
+        int hex = res.getColumnIndex(COLUMN_HEX), name = res.getColumnIndex(COLUMN_COLOR_NAME),
                 rgb = res.getColumnIndex(COLUMN_RGB);
 
         CustomColor c;

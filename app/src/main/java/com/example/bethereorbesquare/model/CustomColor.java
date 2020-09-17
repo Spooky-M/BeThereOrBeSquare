@@ -13,6 +13,8 @@ public class CustomColor {
     @SerializedName("rgb")
     private String rgb;
 
+    private int rgbInt;
+
     public CustomColor(String hex, String name, String rgb) {
         this.hex = hex;
         this.name = name;
@@ -41,5 +43,13 @@ public class CustomColor {
 
     public void setRgb(String rgb) {
         this.rgb = rgb;
+    }
+
+    public int getRgbInt() {
+        return rgbInt;
+    }
+
+    public void setRgbInt(int rgbInt) {
+        this.rgbInt = rgbInt;
     }
 }

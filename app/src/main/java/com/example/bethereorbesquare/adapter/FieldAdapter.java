@@ -1,7 +1,6 @@
 package com.example.bethereorbesquare.adapter;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -13,6 +12,7 @@ import com.example.bethereorbesquare.R;
 import com.example.bethereorbesquare.shapes.Rectangle;
 
 import java.util.List;
+import java.util.Random;
 
 public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHolder> {
 
@@ -44,7 +44,7 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
 
     @Override
     public int getItemCount() {
-        return rectangles.size();
+        return rectangles == null ? 0 : rectangles.size();
     }
 
     // Provide a reference to the views for each data item
@@ -60,9 +60,7 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
         }
 
         public void setDetails(Rectangle r) {
-//            Random rand = new Random();
-//            rectangleView.setBackgroundColor(rand.nextInt(256));
-            rectangleView.setBackgroundColor(Color.parseColor(r.getColor().getHex()));
+            rectangleView.setBackgroundColor(r.getColor().getRgbInt());
             rectangleView.setText(r.getIndex());
 
             rectangleView.setFocusableInTouchMode(true);

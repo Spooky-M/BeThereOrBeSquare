@@ -1,5 +1,6 @@
 package com.example.bethereorbesquare.activity;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -39,6 +40,7 @@ public class Field extends Activity {
     private List<Rectangle> field;
     private List<FieldListener> listeners = new ArrayList<>();
 
+    @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -59,7 +61,7 @@ public class Field extends Activity {
             rows = dimensions.getInt("rows");
             columns = dimensions.getInt("columns");
             if (rows <= 0 || columns <= 0) throw new IllegalArgumentException();
-            dbHelper.initRectanglesDatabase(dbHelper.getAllColors());
+            dbHelper.fillRectanglesDatabase(dbHelper.getAllColors());
         }
 
         //TODO 6) Napravi prikaz grida koristeći RecyclerView (mora imat GridLayoutManager da bude grid)
@@ -71,6 +73,22 @@ public class Field extends Activity {
         recyclerView.setAdapter(fieldAdapter);
         recyclerView.setLayoutManager(new GridLayoutManager(this, columns));
         recyclerView.setHasFixedSize(true);
+        recyclerView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction() != MotionEvent.ACTION_DOWN) return false;
+
+                float x = event.getX(), y = event.getY();
+                float width = Field.this.recyclerView.getWidth(),
+                        height = Field.this.recyclerView.getHeight();
+                int rows = Field.this.rows, columns = Field.this.columns;
+
+
+
+                return true;
+            }
+        });
+
 
         switchButton.setOnClickListener(new View.OnClickListener() {
             @Override
