@@ -14,11 +14,21 @@ import android.widget.Button;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.annotation.RestrictTo;
+import androidx.recyclerview.selection.ItemDetailsLookup;
+import androidx.recyclerview.selection.ItemKeyProvider;
+import androidx.recyclerview.selection.OnItemActivatedListener;
+import androidx.recyclerview.selection.Selection;
+import androidx.recyclerview.selection.SelectionPredicates;
+import androidx.recyclerview.selection.SelectionTracker;
+import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.bethereorbesquare.R;
 import com.example.bethereorbesquare.adapter.FieldAdapter;
+import com.example.bethereorbesquare.adapter.FieldItemDetailsLookup;
+import com.example.bethereorbesquare.adapter.FieldItemKeyProvider;
 import com.example.bethereorbesquare.listeners.FieldListener;
 import com.example.bethereorbesquare.service.DatabaseHelper;
 import com.example.bethereorbesquare.shapes.Rectangle;
@@ -39,6 +49,9 @@ public class Field extends Activity {
 
     private List<Rectangle> field;
     private List<FieldListener> listeners = new ArrayList<>();
+
+    public static final String SELECTION_ID = "selection_id";
+    private static final int MAX_SELECTIONS = 2;
 
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -61,7 +74,7 @@ public class Field extends Activity {
             rows = dimensions.getInt("rows");
             columns = dimensions.getInt("columns");
             if (rows <= 0 || columns <= 0) throw new IllegalArgumentException();
-            dbHelper.fillRectanglesDatabase(dbHelper.getAllColors());
+            dbHelper.fillRectanglesTable(dbHelper.getAllColors());
         }
 
         //TODO 6) Napravi prikaz grida koristeći RecyclerView (mora imat GridLayoutManager da bude grid)
@@ -73,37 +86,43 @@ public class Field extends Activity {
         recyclerView.setAdapter(fieldAdapter);
         recyclerView.setLayoutManager(new GridLayoutManager(this, columns));
         recyclerView.setHasFixedSize(true);
-        recyclerView.setOnTouchListener(new View.OnTouchListener() {
+
+        SelectionTracker<Long> selectionTracker = new SelectionTracker.Builder<>(
+                SELECTION_ID, recyclerView,
+                new FieldItemKeyProvider(ItemKeyProvider.SCOPE_CACHED, field),
+                new FieldItemDetailsLookup(recyclerView), StorageStrategy.createLongStorage())
+                .withSelectionPredicate(SelectionPredicates.createSelectAnything())
+                .build();
+        fieldAdapter.setSelectionTracker(selectionTracker);
+
+        selectionTracker.addObserver(new SelectionTracker.SelectionObserver<Long>() {
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if(event.getAction() != MotionEvent.ACTION_DOWN) return false;
+            public void onSelectionChanged() {
+                super.onSelectionChanged();
+                Selection<Long> selection = selectionTracker.getSelection();
+                if(selection.size() > MAX_SELECTIONS + 1) throw new IllegalArgumentException();
 
-                float x = event.getX(), y = event.getY();
-                float width = Field.this.recyclerView.getWidth(),
-                        height = Field.this.recyclerView.getHeight();
-                int rows = Field.this.rows, columns = Field.this.columns;
+                //todo
 
+                if(selection.size() == MAX_SELECTIONS + 1) {
+                    firstSelected.setSelected(false);
+                    firstSelected = secondSelected;
+                }
 
-
-                return true;
             }
         });
 
-
-        switchButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(secondSelected != null) {
-                    int index1 = field.indexOf(firstSelected), index2 = field.indexOf(secondSelected);
-                    field.set(index1, secondSelected);
-                    field.set(index2, firstSelected);
-                    firstSelected.setSelected(false);
-                    secondSelected.setSelected(false);
-                    firstSelected = secondSelected = null;
-                    recyclerView.invalidate();
-                    recyclerView.requestLayout();
-                    fieldChanged();
-                }
+        switchButton.setOnClickListener(v -> {
+            if(secondSelected != null) {
+                int index1 = field.indexOf(firstSelected), index2 = field.indexOf(secondSelected);
+                field.set(index1, secondSelected);
+                field.set(index2, firstSelected);
+                firstSelected.setSelected(false);
+                secondSelected.setSelected(false);
+                firstSelected = secondSelected = null;
+                recyclerView.invalidate();
+                recyclerView.requestLayout();
+                fieldChanged();
             }
         });
     }

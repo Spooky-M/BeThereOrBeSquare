@@ -17,7 +17,6 @@ import com.example.bethereorbesquare.model.CustomColor;
 import com.example.bethereorbesquare.shapes.Rectangle;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
@@ -137,16 +136,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         res.close();
 
-        list.sort(new Comparator<Rectangle>() {
-            @Override
-            public int compare(Rectangle o1, Rectangle o2) {
-                return Integer.compare(o1.getIndex(), o2.getIndex());
-            }
-        });
+        list.sort((o1, o2) -> Integer.compare(o1.getIndex(), o2.getIndex()));
         return list;
     }
 
-    public void fillRectanglesDatabase(List<CustomColor> colors) {
+    public void fillRectanglesTable(List<CustomColor> colors) {
         SQLiteDatabase db = this.getWritableDatabase();
         List<Rectangle> rectangles = Util.makeRectangles(colors);
         Cursor cursor = null;
@@ -171,13 +165,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public void insertColor(CustomColor c) {
-        SQLiteDatabase db = getWritableDatabase();
-        Cursor cursor = db.rawQuery("INSERT INTO " + COLORS_TABLE_NAME +
-                        " (" + COLUMN_HEX + ", " + COLUMN_COLOR_NAME + ", "  + COLUMN_RGB + ")"
-                        + " VALUES ('" + c.getHex() + "', '"  + c.getName() + "', "
-                        + c.getRgbInt() + ")" ,
-                null);
-        cursor.close();
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COLUMN_HEX, c.getHex());
+        contentValues.put(COLUMN_COLOR_NAME, c.getName());
+        contentValues.put(COLUMN_RGB, c.getRgbInt());
+        db.insert(COLORS_TABLE_NAME, null, contentValues);
     }
 
     public Cursor getColorByName(String name) {

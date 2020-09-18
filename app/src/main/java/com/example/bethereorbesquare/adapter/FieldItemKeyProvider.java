@@ -18,7 +18,7 @@ public class FieldItemKeyProvider extends ItemKeyProvider<Long> {
      *
      * @param scope Scope can't be changed at runtime.
      */
-    protected FieldItemKeyProvider(int scope, List<Rectangle> itemList) {
+    public FieldItemKeyProvider(int scope, List<Rectangle> itemList) {
         super(scope);
         this.itemList = itemList;
     }

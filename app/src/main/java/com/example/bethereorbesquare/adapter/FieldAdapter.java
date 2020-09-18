@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.selection.ItemDetailsLookup;
+import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.bethereorbesquare.R;
@@ -20,7 +21,7 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
 
     private Context context;
     private List<Rectangle> rectangles;
-//    private //todo onaj neki listener il nes
+    private SelectionTracker<Long> selectionTracker;
 
     public FieldAdapter(Context context, List<Rectangle> rectangles) {
         this.rectangles = rectangles;
@@ -56,13 +57,20 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
         return rectangles.get(position).getId();
     }
 
+    public SelectionTracker<Long> getSelectionTracker() {
+        return selectionTracker;
+    }
+
+    public void setSelectionTracker(SelectionTracker<Long> selectionTracker) {
+        this.selectionTracker = selectionTracker;
+    }
+
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
     // you provide access to all the views for a data item in a view holder
     public class FieldViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
         public TextView rectangleView;
-        private Rectangle rectangle;
 
         public FieldViewHolder(TextView v) {
             super(v);
@@ -70,7 +78,8 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
         }
 
         public void setDetails(Rectangle r) {
-            rectangle = r;
+            rectangleView.setActivated(true);
+
             rectangleView.setBackgroundColor(r.getColor().getRgbInt());
             if(r.isSelected()) {
                 Drawable d = ContextCompat.getDrawable(context, R.drawable.selected_cell);
