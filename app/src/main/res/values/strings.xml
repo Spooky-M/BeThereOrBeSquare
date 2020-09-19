@@ -14,4 +14,7 @@
     <string name="draw_view">Field</string>
     <string name="progress">Loading…</string>
     <string name="number">0</string>
+
+    <string name="continue_preferences">continue_preferences</string>
+    <string name="continue_key">continue_key</string>
 </resources>

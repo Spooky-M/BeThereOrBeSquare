@@ -34,9 +34,6 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final String CONTINUE_PREFERENCES = "continue_preferences";
-    public static final String CONTINUE_KEY = "continue";
-
     private DatabaseHelper dbHelper;
     private List<CustomColor> colors;
 
@@ -65,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
             fetchColors();
         }
 
-        SharedPreferences preferences = getSharedPreferences(CONTINUE_PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences preferences = getSharedPreferences(String.valueOf(getText(R.string.continue_preferences)), Context.MODE_PRIVATE);
         final SharedPreferences.Editor editor = preferences.edit();
 
         startButton.setOnClickListener(v -> {
@@ -81,38 +78,34 @@ public class MainActivity extends AppCompatActivity {
             final TextInputEditText inputFieldRows = customLayout.findViewById(R.id.editTextRows);
             final TextInputEditText inputFieldColumns = customLayout.findViewById(R.id.editTextColumns);
 
-            builder.setPositiveButton("Next", new DialogInterface.OnClickListener() {
-                @SuppressLint("InflateParams")
-                @Override
-                public void onClick(DialogInterface dialog, int which) {    // add a button
-                    // read data and send it from the AlertDialog to the Activity
-                    int rows, columns;
-                    try {
-                        rows = Integer.parseInt(String.valueOf(inputFieldRows.getText()));
-                        columns = Integer.parseInt(String.valueOf(inputFieldColumns.getText()));
-                        if(rows <= 0 || columns <= 0) throw new IllegalArgumentException();
-                    } catch(IllegalArgumentException e) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                        builder.setTitle("Error");
-                        builder.setMessage("Values for rows and columns need to be positive.");
-                        builder.setPositiveButton("OK", null);
-                        AlertDialog d = builder.create();
-                        d.show();
-                        return;
-                    }
-
-                    dbHelper.initNewRectanglesTable(); // inicializiraj novu tablicu tek kad korisnik unese i potvrdi parametre
-                    editor.putBoolean(CONTINUE_KEY, false);
-                    editor.apply();
-
-                    Bundle dimensions = new Bundle();
-                    dimensions.putInt("rows", rows);
-                    dimensions.putInt("columns", columns);
-
-                    Intent intent = new Intent(MainActivity.this, Field.class);
-                    intent.putExtra("dimensions", dimensions);
-                    startActivity(intent);
+            builder.setPositiveButton("Next", (dialog, which) -> {    // add a button
+                // read data and send it from the AlertDialog to the Activity
+                int rows, columns;
+                try {
+                    rows = Integer.parseInt(String.valueOf(inputFieldRows.getText()));
+                    columns = Integer.parseInt(String.valueOf(inputFieldColumns.getText()));
+                    if(rows <= 0 || columns <= 0) throw new IllegalArgumentException();
+                } catch(IllegalArgumentException e) {
+                    AlertDialog.Builder builder1 = new AlertDialog.Builder(MainActivity.this);
+                    builder1.setTitle("Error");
+                    builder1.setMessage("Values for rows and columns need to be positive.");
+                    builder1.setPositiveButton("OK", null);
+                    AlertDialog d = builder1.create();
+                    d.show();
+                    return;
                 }
+
+                dbHelper.initNewRectanglesTable(); // inicializiraj novu tablicu tek kad korisnik unese i potvrdi parametre
+                editor.putBoolean(String.valueOf(getText(R.string.continue_key)), false);
+                editor.apply();
+
+                Bundle dimensions = new Bundle();
+                dimensions.putInt("rows", rows);
+                dimensions.putInt("columns", columns);
+
+                Intent intent = new Intent(MainActivity.this, Field.class);
+                intent.putExtra("dimensions", dimensions);
+                startActivity(intent);
             });        // create and show the alert dialog
             AlertDialog dialog = builder.create();
             dialog.show();
@@ -130,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
                 AlertDialog dialog = builder.create();
                 dialog.show();
             } else {
-                editor.putBoolean(CONTINUE_KEY, true);
+                editor.putBoolean(String.valueOf(getText(R.string.continue_key)), true);
                 editor.apply();
                 startActivity(new Intent(MainActivity.this, Field.class));
             }

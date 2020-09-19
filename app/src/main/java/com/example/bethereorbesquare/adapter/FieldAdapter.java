@@ -6,14 +6,10 @@ import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
-import androidx.recyclerview.selection.ItemDetailsLookup;
-import androidx.recyclerview.selection.SelectionTracker;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.bethereorbesquare.R;
@@ -26,7 +22,7 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
     private Context context;
     private List<Rectangle> rectangles;
     private RectangleClickListener rectangleClickListener;
-//    private SelectionTracker<Long> selectionTracker;
+    private int itemHeight, itemWidth;
 
     public FieldAdapter(Context context, List<Rectangle> rectangles) {
         this.rectangles = rectangles;
@@ -41,16 +37,18 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
         // create a new view
         TextView v = (TextView) LayoutInflater.from(context)
                 .inflate(R.layout.rectangle_cell, parent, false);
-//        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams()
-//        TextView v = new TextView(context);
         return new FieldViewHolder(v);
     }
 
     // Replace the contents of a view (invoked by the layout manager)
     @Override
-    public void onBindViewHolder(FieldViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull FieldViewHolder holder, int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
+        if(itemWidth != 0 && itemHeight != 0) {
+            holder.rectangleView.getLayoutParams().height = itemHeight;
+            holder.rectangleView.getLayoutParams().width = itemWidth;
+        }
         holder.setDetails(rectangles.get(position));
     }
 
@@ -64,13 +62,21 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
         return rectangles.get(position).getId();
     }
 
-    //    public SelectionTracker<Long> getSelectionTracker() {
-//        return selectionTracker;
-//    }
-//
-//    public void setSelectionTracker(SelectionTracker<Long> selectionTracker) {
-//        this.selectionTracker = selectionTracker;
-//    }
+    public int getItemHeight() {
+        return itemHeight;
+    }
+
+    public void setItemHeight(int itemHeight) {
+        this.itemHeight = itemHeight;
+    }
+
+    public int getItemWidth() {
+        return itemWidth;
+    }
+
+    public void setItemWidth(int itemWidth) {
+        this.itemWidth = itemWidth;
+    }
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -91,22 +97,21 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
             rectangleView.setText(String.valueOf(r.getIndex() + 1));
             rectangleView.setFocusableInTouchMode(true);
             rectangleView.setClickable(true);
-            rectangleView.setEnabled(true);
-        }
-
-        public ItemDetailsLookup.ItemDetails<Long> getItemDetails() {
-            return new FieldItemDetail(getAdapterPosition(), rectangles.get(getAdapterPosition()).getId());
         }
 
         @Override
         public void onClick(View v) {
-            if(rectangleClickListener != null) rectangleClickListener.onRectangleClick(v, getAdapterPosition());
+            if(rectangleClickListener != null) {
+                rectangleClickListener.onRectangleClick(v, getAdapterPosition());
+
+            }
         }
 
         private void handleSelection(Rectangle rectangle) {
             if(rectangle.isSelected()) {
                 rectangleView.setActivated(true);
                 Drawable d = ContextCompat.getDrawable(context, R.drawable.selected_cell);
+                assert d != null;
                 rectangleView.setBackground(d);
             } else {
                 rectangleView.setActivated(false);

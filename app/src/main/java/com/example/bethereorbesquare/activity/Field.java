@@ -1,7 +1,6 @@
 package com.example.bethereorbesquare.activity;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -9,23 +8,15 @@ import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.selection.ItemKeyProvider;
-import androidx.recyclerview.selection.SelectionPredicates;
-import androidx.recyclerview.selection.SelectionTracker;
-import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.bethereorbesquare.R;
-import com.example.bethereorbesquare.adapter.ActionModeController;
 import com.example.bethereorbesquare.adapter.FieldAdapter;
-import com.example.bethereorbesquare.adapter.FieldItemDetailsLookup;
-import com.example.bethereorbesquare.adapter.FieldItemKeyProvider;
 import com.example.bethereorbesquare.listeners.FieldListener;
 import com.example.bethereorbesquare.service.DatabaseHelper;
 import com.example.bethereorbesquare.shapes.Rectangle;
@@ -39,34 +30,29 @@ public class Field extends AppCompatActivity implements FieldAdapter.RectangleCl
     private DatabaseHelper dbHelper;
     private RecyclerView recyclerView;
     private FieldAdapter fieldAdapter;
-    private ActionModeController controller;
     private Button switchButton;
     private int rows, columns;
+    SharedPreferences preferences;
 
     private Rectangle firstSelected, secondSelected;
 
     private List<Rectangle> field;
     private List<FieldListener> listeners = new ArrayList<>();
 
-    public static final String SELECTION_ID = "selection_id";
-    private static final int MAX_SELECTIONS = 2;
-
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        if(savedInstanceState != null) {
-//            fieldAdapter.getSelectionTracker().onRestoreInstanceState(savedInstanceState);
-//        }
 
         setContentView(R.layout.activity_field);
         recyclerView = findViewById(R.id.recycler_view);
         switchButton = findViewById(R.id.switch_button);
 
         dbHelper = new DatabaseHelper(this);
-        SharedPreferences preferences = getSharedPreferences(MainActivity.CONTINUE_PREFERENCES, Context.MODE_PRIVATE);
-        boolean cont = preferences.getBoolean(MainActivity.CONTINUE_KEY, false);
+
+        preferences = getSharedPreferences(String.valueOf(getText(R.string.continue_preferences)), Context.MODE_PRIVATE);
+        boolean cont = preferences.getBoolean(String.valueOf(getText(R.string.continue_key)), false);
 
         if(!cont) {
             Bundle extras = getIntent().getExtras();
@@ -85,37 +71,12 @@ public class Field extends AppCompatActivity implements FieldAdapter.RectangleCl
         // Dokumentacija -> https://developer.android.com/guide/topics/ui/layout/recyclerview
         // Nemoj zaboravit dodat i redni broj u prikazu kvadratića
 
-        fieldAdapter = new FieldAdapter(this, field);
-        fieldAdapter.setClickListener(this);
-        recyclerView.setAdapter(fieldAdapter);
+
+        fieldAdapter = new FieldAdapter(Field.this, field);
+        fieldAdapter.setClickListener(Field.this);
         recyclerView.setLayoutManager(new GridLayoutManager(this, columns));
         recyclerView.setHasFixedSize(true);
-
-//        SelectionTracker<Long> selectionTracker = new SelectionTracker.Builder<>(
-//                SELECTION_ID, recyclerView,
-//                new FieldItemKeyProvider(ItemKeyProvider.SCOPE_CACHED, field),
-//                new FieldItemDetailsLookup(recyclerView), StorageStrategy.createLongStorage())
-//                .withSelectionPredicate(SelectionPredicates.createSelectAnything())
-//                .build();
-//        fieldAdapter.setSelectionTracker(selectionTracker);
-//
-//        selectionTracker.addObserver(new SelectionTracker.SelectionObserver<Long>() {
-//            @Override
-//            public void onSelectionChanged() {
-//                super.onSelectionChanged();
-//
-//
-//                Selection<Long> selection = selectionTracker.getSelection();
-//                if(selection.size() > MAX_SELECTIONS + 1) throw new IllegalArgumentException();
-//
-//                //todo
-//
-//                if(selection.size() == MAX_SELECTIONS + 1) {
-//                    firstSelected.setSelected(false);
-//                    firstSelected = secondSelected;
-//                }
-//            }
-//        });
+        recyclerView.setAdapter(fieldAdapter);
 
         switchButton.setOnClickListener(v -> {
             if(secondSelected != null) {
@@ -134,6 +95,14 @@ public class Field extends AppCompatActivity implements FieldAdapter.RectangleCl
     public void onRectangleClick(View v, int position) {
         Rectangle cur = field.get(position);
         cur.setSelected(!cur.isSelected());
+        if(secondSelected == null) {
+            if(firstSelected == null) firstSelected = cur;
+            else secondSelected = cur;
+        } else {
+            firstSelected.setSelected(false);
+            firstSelected = secondSelected;
+            secondSelected = cur;
+        }
         processFieldChange();
     }
 
@@ -142,6 +111,9 @@ public class Field extends AppCompatActivity implements FieldAdapter.RectangleCl
         super.onPause();
         for(Rectangle r : field) {
             dbHelper.updateRectangle(r);
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putBoolean(String.valueOf(getText(R.string.continue_key)), true);
+            editor.apply();
         }
     }
 
@@ -149,8 +121,6 @@ public class Field extends AppCompatActivity implements FieldAdapter.RectangleCl
     @Override
     protected void onResume() {
         super.onResume();
-        field = dbHelper.getAllRectangles();
-        processFieldChange();
     }
 
     @Override
@@ -171,17 +141,17 @@ public class Field extends AppCompatActivity implements FieldAdapter.RectangleCl
         return super.onKeyDown(keyCode, event);
     }
 
-    protected void fieldChanged() {
-        for(FieldListener fl : listeners) {
-            fl.onFieldChange();
-        }
-    }
-
     private void processFieldChange() {
         fieldAdapter.notifyDataSetChanged();
         recyclerView.invalidate();
         recyclerView.requestLayout();
         fieldChanged();
+    }
+
+    protected void fieldChanged() {
+        for(FieldListener fl : listeners) {
+            fl.onFieldChange();
+        }
     }
 
     public void attachFieldListener(FieldListener fl) {
