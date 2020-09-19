@@ -50,7 +50,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + RECTANGLES_TABLE_NAME +
                 "(" + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + COLUMN_INDEX + " INTEGER UNIQUE, " + COLUMN_COLOR_NAME + " TEXT UNIQUE, " + COLUMN_SELECTED + " INTEGER)");
+                + COLUMN_INDEX + " INTEGER UNIQUE, " + COLUMN_COLOR_NAME + " TEXT, " + COLUMN_SELECTED + " INTEGER)");
 
         db.execSQL("CREATE TABLE IF NOT EXISTS " + COLORS_TABLE_NAME +
                 "(" + COLUMN_HEX + " TEXT, " + COLUMN_COLOR_NAME + " TEXT PRIMARY KEY, " + COLUMN_RGB + " INTEGER)");
@@ -140,18 +140,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return list;
     }
 
-    public void fillRectanglesTable(List<CustomColor> colors) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        List<Rectangle> rectangles = Util.makeRectangles(colors);
-        Cursor cursor = null;
+    public void fillRectanglesTable(int n, List<CustomColor> colors) {
+        List<Rectangle> rectangles = Util.makeRectangles(n, colors);
         for(Rectangle r : rectangles) {
-            cursor = db.rawQuery("INSERT INTO " + RECTANGLES_TABLE_NAME +
-                    " (" + COLUMN_INDEX + ", " + COLUMN_COLOR_NAME + ", "  + COLUMN_SELECTED + ")"
-                    + " VALUES (" + r.getIndex() + ", '"  + r.getColor().getName() + "', "
-                    + (r.isSelected() ? 1 : 0) + ")" ,
-                    null);
+            insertRectangle(r);
         }
-        if(cursor != null) cursor.close();
     }
 
     public void initNewRectanglesTable() {

@@ -7,18 +7,14 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.annotation.RestrictTo;
-import androidx.recyclerview.selection.ItemDetailsLookup;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.selection.ItemKeyProvider;
-import androidx.recyclerview.selection.OnItemActivatedListener;
-import androidx.recyclerview.selection.Selection;
 import androidx.recyclerview.selection.SelectionPredicates;
 import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.selection.StorageStrategy;
@@ -26,6 +22,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.bethereorbesquare.R;
+import com.example.bethereorbesquare.adapter.ActionModeController;
 import com.example.bethereorbesquare.adapter.FieldAdapter;
 import com.example.bethereorbesquare.adapter.FieldItemDetailsLookup;
 import com.example.bethereorbesquare.adapter.FieldItemKeyProvider;
@@ -37,11 +34,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Field extends Activity {
+public class Field extends AppCompatActivity implements FieldAdapter.RectangleClickListener {
 
     private DatabaseHelper dbHelper;
     private RecyclerView recyclerView;
     private FieldAdapter fieldAdapter;
+    private ActionModeController controller;
     private Button switchButton;
     private int rows, columns;
 
@@ -58,6 +56,10 @@ public class Field extends Activity {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+//        if(savedInstanceState != null) {
+//            fieldAdapter.getSelectionTracker().onRestoreInstanceState(savedInstanceState);
+//        }
+
         setContentView(R.layout.activity_field);
         recyclerView = findViewById(R.id.recycler_view);
         switchButton = findViewById(R.id.switch_button);
@@ -74,43 +76,46 @@ public class Field extends Activity {
             rows = dimensions.getInt("rows");
             columns = dimensions.getInt("columns");
             if (rows <= 0 || columns <= 0) throw new IllegalArgumentException();
-            dbHelper.fillRectanglesTable(dbHelper.getAllColors());
+            dbHelper.fillRectanglesTable(rows * columns, dbHelper.getAllColors());
         }
+        field = dbHelper.getAllRectangles();
 
-        //TODO 6) Napravi prikaz grida koristeći RecyclerView (mora imat GridLayoutManager da bude grid)
+        // TODO 6) Napravi prikaz grida koristeći RecyclerView (mora imat GridLayoutManager da bude grid)
         // Primjer -> https://medium.com/@droidbyme/android-recyclerview-fca74609725e
         // Dokumentacija -> https://developer.android.com/guide/topics/ui/layout/recyclerview
         // Nemoj zaboravit dodat i redni broj u prikazu kvadratića
 
         fieldAdapter = new FieldAdapter(this, field);
+        fieldAdapter.setClickListener(this);
         recyclerView.setAdapter(fieldAdapter);
         recyclerView.setLayoutManager(new GridLayoutManager(this, columns));
         recyclerView.setHasFixedSize(true);
 
-        SelectionTracker<Long> selectionTracker = new SelectionTracker.Builder<>(
-                SELECTION_ID, recyclerView,
-                new FieldItemKeyProvider(ItemKeyProvider.SCOPE_CACHED, field),
-                new FieldItemDetailsLookup(recyclerView), StorageStrategy.createLongStorage())
-                .withSelectionPredicate(SelectionPredicates.createSelectAnything())
-                .build();
-        fieldAdapter.setSelectionTracker(selectionTracker);
-
-        selectionTracker.addObserver(new SelectionTracker.SelectionObserver<Long>() {
-            @Override
-            public void onSelectionChanged() {
-                super.onSelectionChanged();
-                Selection<Long> selection = selectionTracker.getSelection();
-                if(selection.size() > MAX_SELECTIONS + 1) throw new IllegalArgumentException();
-
-                //todo
-
-                if(selection.size() == MAX_SELECTIONS + 1) {
-                    firstSelected.setSelected(false);
-                    firstSelected = secondSelected;
-                }
-
-            }
-        });
+//        SelectionTracker<Long> selectionTracker = new SelectionTracker.Builder<>(
+//                SELECTION_ID, recyclerView,
+//                new FieldItemKeyProvider(ItemKeyProvider.SCOPE_CACHED, field),
+//                new FieldItemDetailsLookup(recyclerView), StorageStrategy.createLongStorage())
+//                .withSelectionPredicate(SelectionPredicates.createSelectAnything())
+//                .build();
+//        fieldAdapter.setSelectionTracker(selectionTracker);
+//
+//        selectionTracker.addObserver(new SelectionTracker.SelectionObserver<Long>() {
+//            @Override
+//            public void onSelectionChanged() {
+//                super.onSelectionChanged();
+//
+//
+//                Selection<Long> selection = selectionTracker.getSelection();
+//                if(selection.size() > MAX_SELECTIONS + 1) throw new IllegalArgumentException();
+//
+//                //todo
+//
+//                if(selection.size() == MAX_SELECTIONS + 1) {
+//                    firstSelected.setSelected(false);
+//                    firstSelected = secondSelected;
+//                }
+//            }
+//        });
 
         switchButton.setOnClickListener(v -> {
             if(secondSelected != null) {
@@ -120,11 +125,16 @@ public class Field extends Activity {
                 firstSelected.setSelected(false);
                 secondSelected.setSelected(false);
                 firstSelected = secondSelected = null;
-                recyclerView.invalidate();
-                recyclerView.requestLayout();
-                fieldChanged();
+                processFieldChange();
             }
         });
+    }
+
+    @Override
+    public void onRectangleClick(View v, int position) {
+        Rectangle cur = field.get(position);
+        cur.setSelected(!cur.isSelected());
+        processFieldChange();
     }
 
     @Override
@@ -140,6 +150,7 @@ public class Field extends Activity {
     protected void onResume() {
         super.onResume();
         field = dbHelper.getAllRectangles();
+        processFieldChange();
     }
 
     @Override
@@ -150,15 +161,11 @@ public class Field extends Activity {
             case KeyEvent.KEYCODE_VOLUME_UP:
                 Rectangle last = field.remove(field.size()-1);
                 field.add(0, last);
-                recyclerView.invalidate();
-                recyclerView.requestLayout();
-                fieldChanged();
+                processFieldChange();
                 return true;
             case KeyEvent.KEYCODE_VOLUME_DOWN:
                 Collections.shuffle(field);
-                recyclerView.invalidate();
-                recyclerView.requestLayout();
-                fieldChanged();
+                processFieldChange();
                 return true;
         }
         return super.onKeyDown(keyCode, event);
@@ -170,6 +177,13 @@ public class Field extends Activity {
         }
     }
 
+    private void processFieldChange() {
+        fieldAdapter.notifyDataSetChanged();
+        recyclerView.invalidate();
+        recyclerView.requestLayout();
+        fieldChanged();
+    }
+
     public void attachFieldListener(FieldListener fl) {
         if(listeners.contains(fl)) return;
         listeners.add(fl);
@@ -177,14 +191,5 @@ public class Field extends Activity {
 
     public void detachFieldListener(FieldListener fl) {
         listeners.remove(fl);
-    }
-
-    public class FieldViewHolder extends RecyclerView.ViewHolder {
-
-        public FieldViewHolder(@NonNull View itemView) {
-            super(itemView);
-        }
-
-
     }
 }

@@ -18,7 +18,6 @@ import android.widget.Toast;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.selection.SelectionTracker;
 
 import com.example.bethereorbesquare.R;
 import com.example.bethereorbesquare.model.CustomColor;
@@ -44,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView title;
     private Button startButton, continueButton;
     private ProgressBar progressBar;
-
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
@@ -160,25 +158,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<List<CustomColor>> call, Response<List<CustomColor>> response) {
                 colors = response.body();
-                String[] parts;
-                try {
-                    for(CustomColor c : colors) {
-                        c.setName(c.getName().replaceAll("'", ""));
-                        parts = c.getRgb()
-                                .replaceAll("\\(", "")
-                                .replaceAll("\\)", "")
-                                .split(",");
-                        c.setRgbInt(Color.rgb(
-                                Integer.parseInt(parts[0].trim()),
-                                Integer.parseInt(parts[1].trim()),
-                                Integer.parseInt(parts[2].trim())));
-                    }
-                } catch (NumberFormatException e) {
-                    Toast.makeText(MainActivity.this,
-                            "Something went wrong while parsing colors... Please try later!", Toast.LENGTH_LONG).show();
-
-                    progressBar.setVisibility(View.INVISIBLE);
-                    return;
+                for(CustomColor c : colors) {
+                    c.setName(c.getName().replaceAll("'", ""));
                 }
 
                 dbHelper.initNewColorsTable();
