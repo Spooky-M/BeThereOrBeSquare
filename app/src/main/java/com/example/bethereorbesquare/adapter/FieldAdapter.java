@@ -94,7 +94,7 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
         public void setDetails(Rectangle r) {
             rectangleView.setBackgroundColor(Color.parseColor(r.getColor().getHex()));
             handleSelection(r);
-            rectangleView.setText(String.valueOf(r.getIndex() + 1));
+            rectangleView.setText(String.valueOf(r.getId()));
             rectangleView.setFocusableInTouchMode(true);
             rectangleView.setClickable(true);
         }

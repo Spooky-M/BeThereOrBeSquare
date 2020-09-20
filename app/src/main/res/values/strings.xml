@@ -17,4 +17,6 @@
 
     <string name="continue_preferences">continue_preferences</string>
     <string name="continue_key">continue_key</string>
+    <string name="columns_key">columns_key</string>
+    <string name="rows_key">rows_key</string>
 </resources>

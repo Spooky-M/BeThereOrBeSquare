@@ -50,7 +50,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + RECTANGLES_TABLE_NAME +
                 "(" + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + COLUMN_INDEX + " INTEGER UNIQUE, " + COLUMN_COLOR_NAME + " TEXT, " + COLUMN_SELECTED + " INTEGER)");
+                + COLUMN_INDEX + " INTEGER, " + COLUMN_COLOR_NAME + " TEXT, " + COLUMN_SELECTED + " INTEGER)");
 
         db.execSQL("CREATE TABLE IF NOT EXISTS " + COLORS_TABLE_NAME +
                 "(" + COLUMN_HEX + " TEXT, " + COLUMN_COLOR_NAME + " TEXT PRIMARY KEY, " + COLUMN_RGB + " INTEGER)");
@@ -63,11 +63,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public void insertRectangle(int index, String name, boolean selected) {
+    public void insertRectangle(int index, String colorName, boolean selected) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COLUMN_INDEX, index);
-        contentValues.put(COLUMN_COLOR_NAME, name);
+        contentValues.put(COLUMN_COLOR_NAME, colorName);
         contentValues.put(COLUMN_SELECTED, selected);
         db.insert(RECTANGLES_TABLE_NAME, null, contentValues);
     }
@@ -76,13 +76,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         insertRectangle(r.getIndex(), r.getColor().getName(), r.isSelected());
     }
 
-    public void updateRectangle(long id, int index, String colorName, boolean isSelected) {
+    public void updateRectangle(long id, int index, String colorName, boolean selected) {
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor res = db.rawQuery("UPDATE " + RECTANGLES_TABLE_NAME + " SET "
-                + COLUMN_INDEX + "=" + index + ", " + COLUMN_COLOR_NAME + "='" + colorName + "', "
-                + COLUMN_SELECTED + "=" + (isSelected ? 1 : 0) + ", " + " WHERE " + COLUMN_ID + "=" + id,
-                null);
-        res.close();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COLUMN_INDEX, index);
+        contentValues.put(COLUMN_COLOR_NAME, colorName);
+        contentValues.put(COLUMN_SELECTED, selected);
+        db.update(RECTANGLES_TABLE_NAME, contentValues, COLUMN_ID + "=?", new String[]{String.valueOf(id)});
     }
 
     public void updateRectangle(Rectangle r) {

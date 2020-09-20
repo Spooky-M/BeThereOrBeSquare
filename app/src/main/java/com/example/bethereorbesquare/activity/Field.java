@@ -1,6 +1,7 @@
 package com.example.bethereorbesquare.activity;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -11,13 +12,11 @@ import android.widget.Button;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.bethereorbesquare.R;
 import com.example.bethereorbesquare.adapter.FieldAdapter;
-import com.example.bethereorbesquare.listeners.FieldListener;
 import com.example.bethereorbesquare.service.DatabaseHelper;
 import com.example.bethereorbesquare.shapes.Rectangle;
 
@@ -25,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Field extends AppCompatActivity implements FieldAdapter.RectangleClickListener {
+public class Field extends Activity implements FieldAdapter.RectangleClickListener {
 
     private DatabaseHelper dbHelper;
     private RecyclerView recyclerView;
@@ -44,7 +43,6 @@ public class Field extends AppCompatActivity implements FieldAdapter.RectangleCl
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_field);
         recyclerView = findViewById(R.id.recycler_view);
         switchButton = findViewById(R.id.switch_button);
@@ -63,6 +61,9 @@ public class Field extends AppCompatActivity implements FieldAdapter.RectangleCl
             columns = dimensions.getInt("columns");
             if (rows <= 0 || columns <= 0) throw new IllegalArgumentException();
             dbHelper.fillRectanglesTable(rows * columns, dbHelper.getAllColors());
+        } else {
+            rows = preferences.getInt(String.valueOf(getText(R.string.rows)), -1);
+            columns = preferences.getInt(String.valueOf(getText(R.string.columns)), -1);
         }
         field = dbHelper.getAllRectangles();
 
@@ -80,11 +81,13 @@ public class Field extends AppCompatActivity implements FieldAdapter.RectangleCl
 
         switchButton.setOnClickListener(v -> {
             if(secondSelected != null) {
-                int index1 = field.indexOf(firstSelected), index2 = field.indexOf(secondSelected);
+                int index1 = firstSelected.getIndex(), index2 = secondSelected.getIndex();
                 field.set(index1, secondSelected);
                 field.set(index2, firstSelected);
                 firstSelected.setSelected(false);
                 secondSelected.setSelected(false);
+                firstSelected.setIndex(index2);
+                secondSelected.setIndex(index1);
                 firstSelected = secondSelected = null;
                 processFieldChange();
             }
@@ -95,13 +98,25 @@ public class Field extends AppCompatActivity implements FieldAdapter.RectangleCl
     public void onRectangleClick(View v, int position) {
         Rectangle cur = field.get(position);
         cur.setSelected(!cur.isSelected());
-        if(secondSelected == null) {
-            if(firstSelected == null) firstSelected = cur;
-            else secondSelected = cur;
+
+        if(cur.equals(firstSelected)) {
+            if(secondSelected == null) {
+                firstSelected = null;
+            } else {
+                firstSelected = secondSelected;
+                secondSelected = null;
+            }
+        } else if(cur.equals(secondSelected)) {
+            secondSelected = null;
         } else {
-            firstSelected.setSelected(false);
-            firstSelected = secondSelected;
-            secondSelected = cur;
+            if(secondSelected == null) {
+                if(firstSelected == null) firstSelected = cur;
+                else secondSelected = cur;
+            } else {
+                firstSelected.setSelected(false);
+                firstSelected = secondSelected;
+                secondSelected = cur;
+            }
         }
         processFieldChange();
     }
@@ -111,13 +126,14 @@ public class Field extends AppCompatActivity implements FieldAdapter.RectangleCl
         super.onPause();
         for(Rectangle r : field) {
             dbHelper.updateRectangle(r);
-            SharedPreferences.Editor editor = preferences.edit();
-            editor.putBoolean(String.valueOf(getText(R.string.continue_key)), true);
-            editor.apply();
         }
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean(String.valueOf(getText(R.string.continue_key)), true);
+        editor.putInt(String.valueOf(getText(R.string.rows)), rows);
+        editor.putInt(String.valueOf(getText(R.string.columns)), columns);
+        editor.apply();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onResume() {
         super.onResume();
@@ -125,16 +141,22 @@ public class Field extends AppCompatActivity implements FieldAdapter.RectangleCl
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if(event.getAction() != KeyEvent.ACTION_DOWN) return true;
+        if(event.getAction() != KeyEvent.ACTION_DOWN) return false;
 
         switch(keyCode) {
             case KeyEvent.KEYCODE_VOLUME_UP:
                 Rectangle last = field.remove(field.size()-1);
                 field.add(0, last);
+                for(int i = 0; i < field.size(); i++) {
+                    field.get(i).setIndex(i);
+                }
                 processFieldChange();
                 return true;
             case KeyEvent.KEYCODE_VOLUME_DOWN:
                 Collections.shuffle(field);
+                for(int i = 0; i < field.size(); i++) {
+                    field.get(i).setIndex(i);
+                }
                 processFieldChange();
                 return true;
         }

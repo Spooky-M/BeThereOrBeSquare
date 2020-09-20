@@ -1,7 +1,13 @@
 package com.example.bethereorbesquare.shapes;
 
 
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
 import com.example.bethereorbesquare.model.CustomColor;
+
+import java.util.Objects;
 
 public class Rectangle {
 
@@ -52,5 +58,19 @@ public class Rectangle {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Rectangle rectangle = (Rectangle) o;
+        return id == rectangle.id;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
