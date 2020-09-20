@@ -17,20 +17,47 @@ import com.example.bethereorbesquare.shapes.Rectangle;
 
 import java.util.List;
 
+/**
+ * Adapter for {@link RecyclerView}.
+ */
 public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHolder> {
 
+    /**
+     * Current app context
+     */
     private Context context;
+
+    /**
+     * Data, list of all rectangles to be drawn
+     */
     private List<Rectangle> rectangles;
+
+    /**
+     * Click listener, is triggered with a click on its {@link FieldViewHolder}.
+     * See also {@link RectangleClickListener}
+     */
     private RectangleClickListener rectangleClickListener;
+
+    /**
+     * Height and width of one item and its {@link FieldViewHolder}
+     */
     private int itemHeight, itemWidth;
 
+    /**
+     *
+     * @param context {@link FieldAdapter#context}
+     * @param rectangles {@link FieldAdapter#rectangles}
+     */
     public FieldAdapter(Context context, List<Rectangle> rectangles) {
         this.rectangles = rectangles;
         this.context = context;
         this.setHasStableIds(true);
     }
 
-    // Create new views (invoked by the layout manager)
+    /**
+     * Creates new views (invoked by the layout manager)
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public FieldViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -40,7 +67,10 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
         return new FieldViewHolder(v);
     }
 
-    // Replace the contents of a view (invoked by the layout manager)
+    /**
+     * Replace the contents of a view (invoked by the layout manager)
+     * {@inheritDoc}
+     */
     @Override
     public void onBindViewHolder(@NonNull FieldViewHolder holder, int position) {
         // - get element from your dataset at this position
@@ -52,45 +82,73 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
         holder.setDetails(rectangles.get(position));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getItemCount() {
         return rectangles == null ? 0 : rectangles.size();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long getItemId(int position) {
         return rectangles.get(position).getId();
     }
 
+    /**
+     * @return {@link FieldAdapter#itemHeight}
+     */
     public int getItemHeight() {
         return itemHeight;
     }
 
+    /**
+     * @param itemHeight {@link FieldAdapter#itemHeight}
+     */
     public void setItemHeight(int itemHeight) {
         this.itemHeight = itemHeight;
     }
 
+    /**
+     * @return {@link FieldAdapter#itemWidth}
+     */
     public int getItemWidth() {
         return itemWidth;
     }
 
+    /**
+     * @param itemWidth {@link FieldAdapter#itemWidth}
+     */
     public void setItemWidth(int itemWidth) {
         this.itemWidth = itemWidth;
     }
 
-    // Provide a reference to the views for each data item
-    // Complex data items may need more than one view per item, and
-    // you provide access to all the views for a data item in a view holder
+    /**
+     * Provides a reference to the views for each data item.
+     */
     public class FieldViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        // each data item is just a string in this case
+        /**
+         * One rectangle cell is a colored {@link TextView}, with text set to {@link Rectangle#getId()}
+         */
         public TextView rectangleView;
 
+        /**
+         * View holder's only constructor, binds {@link FieldViewHolder#rectangleView} to the input argument.
+         * @param v input {@link TextView}
+         */
         public FieldViewHolder(TextView v) {
             super(v);
             rectangleView = v.findViewById(R.id.rectangle_view);
             v.setOnClickListener(this);
         }
 
+        /**
+         * Sets view's background, selection bounding box and text to the values taken from rectangle {@code r}.
+         * @param r rectangle which provides data for view's background and text
+         */
         public void setDetails(Rectangle r) {
             rectangleView.setBackgroundColor(Color.parseColor(r.getColor().getHex()));
             handleSelection(r);
@@ -99,6 +157,9 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
             rectangleView.setClickable(true);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void onClick(View v) {
             if(rectangleClickListener != null) {
@@ -107,6 +168,10 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
             }
         }
 
+        /**
+         * Activates the view and draws the bounding box if rectangle is selected.
+         * @param rectangle corresponding {@link Rectangle} object
+         */
         private void handleSelection(Rectangle rectangle) {
             if(rectangle.isSelected()) {
                 rectangleView.setActivated(true);
@@ -119,10 +184,20 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
         }
     }
 
+    /**
+     * Binds a {@link RectangleClickListener} to this adapter.
+     * @param listener provided listener which is to be added to the list of active listeners
+     */
     public void setClickListener(RectangleClickListener listener) {
         this.rectangleClickListener = listener;
     }
 
+    /**
+     * Functional interface which should be implemented by classes using this adapter, if they need to handle
+     * click events. Interface's method provides the user of this adapter with the view which was clicked,
+     * as well as its position within the parent {@link RecyclerView}.
+     */
+    @FunctionalInterface
     public interface RectangleClickListener {
         void onRectangleClick(View v, int position);
     }

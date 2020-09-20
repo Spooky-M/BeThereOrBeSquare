@@ -1,11 +1,8 @@
 package com.example.bethereorbesquare.activity;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -24,6 +21,7 @@ import com.example.bethereorbesquare.model.CustomColor;
 import com.example.bethereorbesquare.network.GetColorService;
 import com.example.bethereorbesquare.network.RetrofitInstance;
 import com.example.bethereorbesquare.service.DatabaseHelper;
+import com.example.bethereorbesquare.shapes.Rectangle;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.List;
@@ -32,21 +30,58 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * Home page and main Activity, contains a title label and 2 buttons. "Start" is for opening
+ * an AlertDialog for creating a new rectangular field with arbitrary number of rows and columns.
+ * "Continue" button will restart the last active rectangular field, if any. On creating activity,
+ * colors are fetched using {@code Retrofit 2.0}, if necessary.
+ *
+ * {@see <a href="https://square.github.io/retrofit/">https://square.github.io/retrofit/<a/>}
+ */
 public class MainActivity extends AppCompatActivity {
 
+    /**
+     * SQLite database helper, see {@link DatabaseHelper}
+     */
     private DatabaseHelper dbHelper;
+
+    /**
+     * List of all available colors
+     */
     private List<CustomColor> colors;
 
+    /**
+     * List of all rectangles to be drawn
+     */
+    private List<Rectangle> rectangles;
+
+    /**
+     * A title {@link TextView}
+     */
     private TextView title;
+
+    /**
+     * Two function buttons for starting a new field, or continuing with the last saved
+     * instance of rectangles field.
+     */
     private Button startButton, continueButton;
+
+    /**
+     * A progress bar element which is shown while the colors are being fetched
+     */
     private ProgressBar progressBar;
 
+    /**
+     * Fetches colors if necessary from <a href="https://goo.gl/gEhgzs/">https://goo.gl/gEhgzs/</a>
+     * and stores them with {@link DatabaseHelper} into SQLite database. When {@code AlertDialog} element
+     * is filled with suitable row and column numbers, {@link Field} Activity is called.
+     * @param savedInstanceState Bundle of last saved state
+     */
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         title = findViewById(R.id.title);
         startButton = findViewById(R.id.start_button);
         continueButton = findViewById(R.id.continue_button);
@@ -56,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
         // dodatno za vježbu možeš napravit neku vrstu keshiranja da se nakon svakih 10 min dohvate nove boje
 
         dbHelper = new DatabaseHelper(this);
+        dbHelper.onCreate(dbHelper.getWritableDatabase());
 
         colors = dbHelper.getAllColors();
         if(colors == null || colors.isEmpty()) {
@@ -112,7 +148,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         continueButton.setOnClickListener(v -> {
-            if(dbHelper == null || dbHelper.getAllRectangles().isEmpty()) {
+            rectangles = dbHelper.getAllRectangles();
+            if(rectangles == null || rectangles.isEmpty()) {
                 //TODO 4) Zamjeni popup sa AlertDialog prikazom
                 // primjer -> https://medium.com/@suragch/making-an-alertdialog-in-android-2045381e2edb
 
@@ -130,6 +167,11 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Obtains colors using {@link RetrofitInstance}. Appropriate URL is called, and on successful response
+     * colors table is created using {@link DatabaseHelper}. While waiting for response,
+     * {@link ProgressBar} is visible.
+     */
     private void fetchColors() {
         //TODO 1) Napraviti dohvat boja s interneta (npr. https://goo.gl/gEhgzs)
         // stariji nacin -> https://medium.com/@JasonCromer/android-asynctask-http-request-tutorial-6b429d833e28
@@ -143,10 +185,8 @@ public class MainActivity extends AppCompatActivity {
 
         GetColorService service = RetrofitInstance.getRetrofitInstance().create(GetColorService.class);
 
-        //sa svim prethodnim promjenama nadalje samo treba postaviti da se umjesto CustomColorList vrati  List<CustomColor>
         Call<List<CustomColor>> call = service.getColorData();
 
-        Log.wtf("URL Called", call.request().url() + "");
         call.enqueue(new Callback<List<CustomColor>>() {
             @Override
             public void onResponse(Call<List<CustomColor>> call, Response<List<CustomColor>> response) {
@@ -170,7 +210,6 @@ public class MainActivity extends AppCompatActivity {
 
                 progressBar.setVisibility(View.INVISIBLE);
             }
-
         });
     }
 }
