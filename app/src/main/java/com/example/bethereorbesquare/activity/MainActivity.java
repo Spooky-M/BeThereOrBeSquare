@@ -122,12 +122,7 @@ public class MainActivity extends AppCompatActivity {
                     columns = Integer.parseInt(String.valueOf(inputFieldColumns.getText()));
                     if(rows <= 0 || columns <= 0) throw new IllegalArgumentException();
                 } catch(IllegalArgumentException e) {
-                    AlertDialog.Builder builder1 = new AlertDialog.Builder(MainActivity.this);
-                    builder1.setTitle("Error");
-                    builder1.setMessage("Values for rows and columns need to be positive.");
-                    builder1.setPositiveButton("OK", null);
-                    AlertDialog d = builder1.create();
-                    d.show();
+                    buildAlertDialog("Illegal values", "Values for rows and columns need to be positive.");
                     return;
                 }
 
@@ -152,13 +147,7 @@ public class MainActivity extends AppCompatActivity {
             if(rectangles == null || rectangles.isEmpty()) {
                 //TODO 4) Zamjeni popup sa AlertDialog prikazom
                 // primjer -> https://medium.com/@suragch/making-an-alertdialog-in-android-2045381e2edb
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("Error");
-                builder.setMessage("There's no saved state. Create a new field by clicking \"Start\".");
-                builder.setPositiveButton("OK", null);
-                AlertDialog dialog = builder.create();
-                dialog.show();
+                buildAlertDialog("Error", "There's no saved state. Create a new field by clicking \"Start\".");
             } else {
                 editor.putBoolean(String.valueOf(getText(R.string.continue_key)), true);
                 editor.apply();
@@ -184,7 +173,6 @@ public class MainActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
 
         GetColorService service = RetrofitInstance.getRetrofitInstance().create(GetColorService.class);
-
         Call<List<CustomColor>> call = service.getColorData();
 
         call.enqueue(new Callback<List<CustomColor>>() {
@@ -207,9 +195,23 @@ public class MainActivity extends AppCompatActivity {
             public void onFailure(Call<List<CustomColor>> call, Throwable t) {
                 Toast.makeText(MainActivity.this,
                         "Something went wrong... Please try later!", Toast.LENGTH_LONG).show();
-
                 progressBar.setVisibility(View.INVISIBLE);
             }
         });
+    }
+
+    /**
+     * Builds an {@link AlertDialog} window with {@code title}, {@code message}
+     * and positive "OK" button and shows it.
+     * @param title window title
+     * @param message window display message
+     */
+    private void buildAlertDialog(String title, String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle(title);
+        builder.setMessage(message);
+        builder.setPositiveButton("OK", null);
+        AlertDialog d = builder.create();
+        d.show();
     }
 }

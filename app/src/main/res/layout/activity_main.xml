@@ -10,7 +10,7 @@
         android:id="@+id/title"
         android:layout_width="289dp"
         android:layout_height="112dp"
-        android:layout_marginTop="44dp"
+        android:layout_marginTop="@dimen/title_top_margin"
         android:fadingEdge="horizontal|vertical"
         android:fadingEdgeLength="1dp"
         android:gravity="center|center_horizontal"
@@ -25,9 +25,9 @@
 
     <Button
         android:id="@+id/start_button"
-        android:layout_width="306dp"
-        android:layout_height="76dp"
-        android:layout_marginTop="180dp"
+        android:layout_width="@dimen/large_button_width"
+        android:layout_height="@dimen/large_button_height"
+        android:layout_marginTop="@dimen/main_button_top_margin"
         android:text="@string/start_button"
         android:textColorHighlight="#FFFFFF"
         android:textSize="18sp"
@@ -39,8 +39,8 @@
 
     <Button
         android:id="@+id/continue_button"
-        android:layout_width="317dp"
-        android:layout_height="78dp"
+        android:layout_width="@dimen/large_button_width"
+        android:layout_height="@dimen/large_button_height"
         android:layout_marginTop="64dp"
         android:text="@string/continue_button"
         android:textSize="18sp"
