@@ -114,13 +114,12 @@ public class Field extends Activity implements FieldAdapter.RectangleClickListen
         field = dbHelper.getAllRectangles();
 
         // TODO 6) Napravi prikaz grida koristeći RecyclerView (mora imat GridLayoutManager da bude grid)
-        // Primjer -> https://medium.com/@droidbyme/android-recyclerview-fca74609725e
-        // Dokumentacija -> https://developer.android.com/guide/topics/ui/layout/recyclerview
-        // Nemoj zaboravit dodat i redni broj u prikazu kvadratića
+        //  Primjer -> https://medium.com/@droidbyme/android-recyclerview-fca74609725e
+        //  Dokumentacija -> https://developer.android.com/guide/topics/ui/layout/recyclerview
+        //  Nemoj zaboravit dodat i redni broj u prikazu kvadratića
 
-
-        fieldAdapter = new FieldAdapter(Field.this, field);
-        fieldAdapter.setClickListener(Field.this);
+        fieldAdapter = new FieldAdapter(this, field, rows, columns);
+        fieldAdapter.setClickListener(this);
         recyclerView.setLayoutManager(new GridLayoutManager(this, columns));
         recyclerView.setHasFixedSize(true);
         recyclerView.setAdapter(fieldAdapter);
