@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -116,10 +117,14 @@ public class MainActivity extends AppCompatActivity {
             builder.setPositiveButton("Next", (dialog, which) -> {    // add a button
                 // read data and send it from the AlertDialog to the Activity
                 int rows, columns;
-                int maxRows = preferences.getInt(String.valueOf(R.integer.max_rows), -1);
-                int maxColumns = preferences.getInt(String.valueOf(R.integer.max_columns), -1);
-                if(maxRows <= 0 || maxColumns <= 0)
-                    throw new IllegalArgumentException("Max rows and columns constraints must be > 0");
+                int maxRows = getResources().getInteger(R.integer.max_rows);
+                int maxColumns = getResources().getInteger(R.integer.max_columns);
+                if(maxRows <= 0 || maxColumns <= 0) {
+                    Log.wtf("Error",
+                            "Values for rows and columns need to be positive, " +
+                                    "row count has to be < " + maxRows +
+                                    " and column count has to be < " + maxColumns + ".");
+                }
                 try {
                     rows = Integer.parseInt(String.valueOf(inputFieldRows.getText()));
                     columns = Integer.parseInt(String.valueOf(inputFieldColumns.getText()));
@@ -171,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Obtains colors using {@link RetrofitInstance}. Appropriate URL is called, and on successful response
-     * colors table is created using {@link DatabaseHelper}. While waiting for response,
+     * colors table is created using {@link DatabaseHelper}. While waiting for the response,
      * {@link ProgressBar} is visible.
      */
     private void fetchColors() {
