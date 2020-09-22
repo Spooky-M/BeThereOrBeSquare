@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
         continueButton = findViewById(R.id.continue_button);
         progressBar = findViewById(R.id.progress_bar);
 
-        //TODO 3) Napravi spremanje boja u lokalnu bazu kako bi izbjegao dohvaćanje boja pri svakom pokretanju aplikacije
+        // 3) Napravi spremanje boja u lokalnu bazu kako bi izbjegao dohvaćanje boja pri svakom pokretanju aplikacije
         // dodatno za vježbu možeš napravit neku vrstu keshiranja da se nakon svakih 10 min dohvate nove boje
 
         dbHelper = new DatabaseHelper(this);
@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         final SharedPreferences.Editor editor = preferences.edit();
 
         startButton.setOnClickListener(v -> {
-            //TODO 5) Pošto NewField služi samo za unos stupaca i redaka, probaj ga izdvojit u AlertDialog i podesit postavljanje parametara unutar dialoga
+            // 5) Pošto NewField služi samo za unos stupaca i redaka, probaj ga izdvojit u AlertDialog i podesit postavljanje parametara unutar dialoga
             // primjer -> https://medium.com/@suragch/creating-a-custom-alertdialog-bae919d2efa5
             // hint: u viewu za unos texta (EditText) možeš postavit da želiš samo brojeve (android:inputType="number")
 
@@ -163,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
             rectangles = dbHelper.getAllRectangles();
             boolean rowsValidityCheck = preferences.getInt(String.valueOf(getText(R.string.rows)), -1) > 0;
             if(rectangles == null || rectangles.isEmpty() || !rowsValidityCheck) {
-                //TODO 4) Zamjeni popup sa AlertDialog prikazom
+                // 4) Zamjeni popup sa AlertDialog prikazom
                 // primjer -> https://medium.com/@suragch/making-an-alertdialog-in-android-2045381e2edb
                 buildAlertDialog("Error", "There's no saved state. Create a new field by clicking \"Start\".");
             } else {
@@ -180,11 +180,11 @@ public class MainActivity extends AppCompatActivity {
      * {@link ProgressBar} is visible.
      */
     private void fetchColors() {
-        //TODO 1) Napraviti dohvat boja s interneta (npr. https://goo.gl/gEhgzs)
+        // 1) Napraviti dohvat boja s interneta (npr. https://goo.gl/gEhgzs)
         // stariji nacin -> https://medium.com/@JasonCromer/android-asynctask-http-request-tutorial-6b429d833e28
         // napredniji nacin -> https://medium.com/@jacinth9/android-retrofit-2-0-tutorial-89de3c714c63, dokumentacija za retrofit2:  https://square.github.io/retrofit/
 
-        //TODO 2) Prilikom dohvaćanja boja onemogući prikaz buttona, stavi loading progress (npr ProgressBar) dok se dohvaća s backenda, kada dobiješ rezultate prikaži buttone
+        // 2) Prilikom dohvaćanja boja onemogući prikaz buttona, stavi loading progress (npr ProgressBar) dok se dohvaća s backenda, kada dobiješ rezultate prikaži buttone
 
         startButton.setEnabled(false);
         continueButton.setEnabled(false);

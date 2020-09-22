@@ -52,7 +52,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * Initiates new rectangles and colors table if either or both of them don't exist.
+     * Initiates new rectangles and colors table if one or both of them don't exist.
      * @param db a writeable {@link SQLiteDatabase} database
      */
     @Override

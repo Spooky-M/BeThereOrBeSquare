@@ -112,7 +112,7 @@ public class Field extends Activity implements FieldAdapter.RectangleClickListen
         }
         field = dbHelper.getAllRectangles();
 
-        // TODO 6) Napravi prikaz grida koristeći RecyclerView (mora imat GridLayoutManager da bude grid)
+        //  6) Napravi prikaz grida koristeći RecyclerView (mora imat GridLayoutManager da bude grid)
         //  Primjer -> https://medium.com/@droidbyme/android-recyclerview-fca74609725e
         //  Dokumentacija -> https://developer.android.com/guide/topics/ui/layout/recyclerview
         //  Nemoj zaboravit dodat i redni broj u prikazu kvadratića
@@ -120,8 +120,7 @@ public class Field extends Activity implements FieldAdapter.RectangleClickListen
         // za bottomMarginVisible bi se slao switchButton.getVisibility() == Button.VISIBLE
         // u slučaju da želimo provjeriti je li gumb vidljiv, i prema toma odrediti visinu
         // polja kvadrava (RecycleView prikaza)
-        fieldAdapter = new FieldAdapter(this, field, rows, columns,
-                true);
+        fieldAdapter = new FieldAdapter(this, field, rows, columns);
         fieldAdapter.setClickListener(this);
         recyclerView.setLayoutManager(new GridLayoutManager(this, columns));
         recyclerView.setHasFixedSize(true);
