@@ -12,10 +12,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.example.bethereorbesquare.R;
 import com.example.bethereorbesquare.model.CustomColor;
 import com.example.bethereorbesquare.network.GetColorService;
@@ -26,6 +22,9 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.List;
 
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -87,8 +86,10 @@ public class MainActivity extends AppCompatActivity {
         continueButton = findViewById(R.id.continue_button);
         progressBar = findViewById(R.id.progress_bar);
 
-        //TODO 3) Napravi spremanje boja u lokalnu bazu kako bi izbjegao dohvaćanje boja pri svakom pokretanju aplikacije
-        // dodatno za vježbu možeš napravit neku vrstu keshiranja da se nakon svakih 10 min dohvate nove boje
+        //TODO 1) Implementiraj Room umjesto SQLiteOpenHelper
+        // dokumentacija -> https://developer.android.com/training/data-storage/room
+        // codelab -> https://codelabs.developers.google.com/codelabs/android-room-with-a-view/#13
+        // primjer -> https://medium.com/mindorks/using-room-database-android-jetpack-675a89a0e942
 
         dbHelper = new DatabaseHelper(this);
         dbHelper.onCreate(dbHelper.getWritableDatabase());
@@ -102,10 +103,6 @@ public class MainActivity extends AppCompatActivity {
         final SharedPreferences.Editor editor = preferences.edit();
 
         startButton.setOnClickListener(v -> {
-            //TODO 5) Pošto NewField služi samo za unos stupaca i redaka, probaj ga izdvojit u AlertDialog i podesit postavljanje parametara unutar dialoga
-            // primjer -> https://medium.com/@suragch/creating-a-custom-alertdialog-bae919d2efa5
-            // hint: u viewu za unos texta (EditText) možeš postavit da želiš samo brojeve (android:inputType="number")
-
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
             builder.setTitle("New Field");
             final View customLayout = getLayoutInflater().inflate(R.layout.activity_newfield, null);
@@ -163,8 +160,6 @@ public class MainActivity extends AppCompatActivity {
             rectangles = dbHelper.getAllRectangles();
             boolean rowsValidityCheck = preferences.getInt(String.valueOf(getText(R.string.rows)), -1) > 0;
             if(rectangles == null || rectangles.isEmpty() || !rowsValidityCheck) {
-                //TODO 4) Zamjeni popup sa AlertDialog prikazom
-                // primjer -> https://medium.com/@suragch/making-an-alertdialog-in-android-2045381e2edb
                 buildAlertDialog("Error", "There's no saved state. Create a new field by clicking \"Start\".");
             } else {
                 editor.putBoolean(String.valueOf(getText(R.string.continue_key)), true);
@@ -180,12 +175,6 @@ public class MainActivity extends AppCompatActivity {
      * {@link ProgressBar} is visible.
      */
     private void fetchColors() {
-        //TODO 1) Napraviti dohvat boja s interneta (npr. https://goo.gl/gEhgzs)
-        // stariji nacin -> https://medium.com/@JasonCromer/android-asynctask-http-request-tutorial-6b429d833e28
-        // napredniji nacin -> https://medium.com/@jacinth9/android-retrofit-2-0-tutorial-89de3c714c63, dokumentacija za retrofit2:  https://square.github.io/retrofit/
-
-        //TODO 2) Prilikom dohvaćanja boja onemogući prikaz buttona, stavi loading progress (npr ProgressBar) dok se dohvaća s backenda, kada dobiješ rezultate prikaži buttone
-
         startButton.setEnabled(false);
         continueButton.setEnabled(false);
         progressBar.setVisibility(View.VISIBLE);

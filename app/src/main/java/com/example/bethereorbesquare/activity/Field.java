@@ -9,11 +9,6 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.bethereorbesquare.R;
 import com.example.bethereorbesquare.adapter.FieldAdapter;
 import com.example.bethereorbesquare.service.DatabaseHelper;
@@ -22,6 +17,11 @@ import com.example.bethereorbesquare.shapes.Rectangle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * An activity which handles the creation and display of rectangles field. Uses {@link RecyclerView},
@@ -111,11 +111,6 @@ public class Field extends Activity implements FieldAdapter.RectangleClickListen
             if(rows < 0 || columns < 0) throw new IllegalArgumentException("Couldn't find rows or columns values!");
         }
         field = dbHelper.getAllRectangles();
-
-        // TODO 6) Napravi prikaz grida koristeći RecyclerView (mora imat GridLayoutManager da bude grid)
-        //  Primjer -> https://medium.com/@droidbyme/android-recyclerview-fca74609725e
-        //  Dokumentacija -> https://developer.android.com/guide/topics/ui/layout/recyclerview
-        //  Nemoj zaboravit dodat i redni broj u prikazu kvadratića
 
         // za bottomMarginVisible bi se slao switchButton.getVisibility() == Button.VISIBLE
         // u slučaju da želimo provjeriti je li gumb vidljiv, i prema toma odrediti visinu
