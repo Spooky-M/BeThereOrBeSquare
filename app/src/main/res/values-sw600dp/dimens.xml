@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="recyclerview_height">850dp</dimen>
     <dimen name="button_width">170dp</dimen>
     <dimen name="button_height">80dp</dimen>
     <dimen name="large_button_width">330dp</dimen>
@@ -9,6 +8,7 @@
     <dimen name="textview_height">70dp</dimen>
     <dimen name="textedit_width">405dp</dimen>
     <dimen name="textedit_height">60dp</dimen>
-    <dimen name="title_top_margin">70</dimen>
+    <dimen name="title_top_margin">70dp</dimen>
     <dimen name="main_button_top_margin">250dp</dimen>
+    <dimen name="switch_button_margin">10dp</dimen>
 </resources>

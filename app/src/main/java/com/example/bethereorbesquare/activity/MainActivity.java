@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -117,12 +116,25 @@ public class MainActivity extends AppCompatActivity {
             builder.setPositiveButton("Next", (dialog, which) -> {    // add a button
                 // read data and send it from the AlertDialog to the Activity
                 int rows, columns;
+                int maxRows = preferences.getInt(String.valueOf(R.integer.max_rows), -1);
+                int maxColumns = preferences.getInt(String.valueOf(R.integer.max_columns), -1);
+                if(maxRows <= 0 || maxColumns <= 0)
+                    throw new IllegalArgumentException("Max rows and columns constraints must be > 0");
                 try {
                     rows = Integer.parseInt(String.valueOf(inputFieldRows.getText()));
                     columns = Integer.parseInt(String.valueOf(inputFieldColumns.getText()));
-                    if(rows <= 0 || columns <= 0) throw new IllegalArgumentException();
                 } catch(IllegalArgumentException e) {
-                    buildAlertDialog("Illegal values", "Values for rows and columns need to be positive.");
+                    buildAlertDialog("Illegal values",
+                            "Values for rows and columns need to be positive, " +
+                                    "row count has to be < " + maxRows +
+                                    " and column count has to be < " + maxColumns + ".");
+                    return;
+                }
+                if(rows <= 0 || columns <= 0 || rows > maxRows || columns > maxColumns) {
+                    buildAlertDialog("Illegal values",
+                            "Values for rows and columns need to be positive, " +
+                                    "row count has to be < " + maxRows +
+                                    " and column count has to be < " + maxColumns + ".");
                     return;
                 }
 
@@ -144,7 +156,8 @@ public class MainActivity extends AppCompatActivity {
 
         continueButton.setOnClickListener(v -> {
             rectangles = dbHelper.getAllRectangles();
-            if(rectangles == null || rectangles.isEmpty()) {
+            boolean rowsValidityCheck = preferences.getInt(String.valueOf(getText(R.string.rows)), -1) > 0;
+            if(rectangles == null || rectangles.isEmpty() || !rowsValidityCheck) {
                 //TODO 4) Zamjeni popup sa AlertDialog prikazom
                 // primjer -> https://medium.com/@suragch/making-an-alertdialog-in-android-2045381e2edb
                 buildAlertDialog("Error", "There's no saved state. Create a new field by clicking \"Start\".");

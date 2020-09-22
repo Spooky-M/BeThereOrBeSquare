@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.DisplayMetrics;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -54,17 +53,26 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
     private int rows, columns;
 
     /**
+     * If true, bottom margin will be calculated, else the {@code RecycleView} will be spread
+     * across the whole screen
+     */
+    private boolean bottomMarginVisible;
+
+    /**
      * A basic constructor, sets {@link FieldAdapter#setHasStableIds(boolean)} to {@code true}.
      * @param context {@link FieldAdapter#context}
      * @param rectangles {@link FieldAdapter#rectangles}
      * @param rows field row count
      * @param columns field column count
+     * @param bottomMarginVisible {@link FieldAdapter#bottomMarginVisible}
      */
-    public FieldAdapter(Context context, List<Rectangle> rectangles, int rows, int columns) {
+    public FieldAdapter(Context context, List<Rectangle> rectangles,
+                        int rows, int columns, boolean bottomMarginVisible) {
         this.rectangles = rectangles;
         this.context = context;
         this.rows = rows;
         this.columns = columns;
+        this.bottomMarginVisible = bottomMarginVisible;
         this.setHasStableIds(true);
     }
 
@@ -129,6 +137,20 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
     }
 
     /**
+     * @return {@link FieldAdapter#bottomMarginVisible}
+     */
+    public boolean isBottomMarginVisible() {
+        return bottomMarginVisible;
+    }
+
+    /**
+     * @param bottomMarginVisible {@link FieldAdapter#bottomMarginVisible}
+     */
+    public void setBottomMarginVisible(boolean bottomMarginVisible) {
+        this.bottomMarginVisible = bottomMarginVisible;
+    }
+
+    /**
      * Calculates dimensions of a single rectangle cell
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
@@ -145,11 +167,18 @@ public class FieldAdapter extends RecyclerView.Adapter<FieldAdapter.FieldViewHol
         int realHeight = realDisplayMetrics.heightPixels;
 
         //todo dobiti razliku izmedu donjeg ruba recycleviewa i dna ekrana
+        float dy = 0;
+        if(bottomMarginVisible) {
+            float switchButtonHeight = context.getResources().getDimension(R.dimen.button_height);
+            float switchButtonMargin = context.getResources().getDimension(R.dimen.switch_button_margin);
+            dy = switchButtonHeight + 2*switchButtonMargin;
+        }
 
-        if (realHeight > usableHeight)
-            itemHeight = (int)(2*realHeight - usableHeight) / rows;
-        else
-            itemHeight = (int)(usableHeight) / rows;
+        if (realHeight > usableHeight) {
+            itemHeight = (int) (2*usableHeight - realHeight - dy) / rows;
+        } else {
+            itemHeight = (int) (usableHeight - dy) / rows;
+        }
         itemWidth = width / columns;
     }
 

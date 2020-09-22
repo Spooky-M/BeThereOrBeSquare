@@ -108,8 +108,7 @@ public class Field extends Activity implements FieldAdapter.RectangleClickListen
         } else {
             rows = preferences.getInt(String.valueOf(getText(R.string.rows)), -1);
             columns = preferences.getInt(String.valueOf(getText(R.string.columns)), -1);
-            if(rows < 0 || columns < 0)
-                throw new IllegalArgumentException("Couldn't find rows or columns values!");
+            if(rows < 0 || columns < 0) throw new IllegalArgumentException("Couldn't find rows or columns values!");
         }
         field = dbHelper.getAllRectangles();
 
@@ -118,7 +117,11 @@ public class Field extends Activity implements FieldAdapter.RectangleClickListen
         //  Dokumentacija -> https://developer.android.com/guide/topics/ui/layout/recyclerview
         //  Nemoj zaboravit dodat i redni broj u prikazu kvadratića
 
-        fieldAdapter = new FieldAdapter(this, field, rows, columns);
+        // za bottomMarginVisible bi se slao switchButton.getVisibility() == Button.VISIBLE
+        // u slučaju da želimo provjeriti je li gumb vidljiv, i prema toma odrediti visinu
+        // polja kvadrava (RecycleView prikaza)
+        fieldAdapter = new FieldAdapter(this, field, rows, columns,
+                true);
         fieldAdapter.setClickListener(this);
         recyclerView.setLayoutManager(new GridLayoutManager(this, columns));
         recyclerView.setHasFixedSize(true);

@@ -19,4 +19,7 @@
     <string name="continue_key">continue_key</string>
     <string name="columns_key">columns_key</string>
     <string name="rows_key">rows_key</string>
+
+    <integer name="max_rows">50</integer>
+    <integer name="max_columns">50</integer>
 </resources>
