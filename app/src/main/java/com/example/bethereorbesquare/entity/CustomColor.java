@@ -1,36 +1,45 @@
-package com.example.bethereorbesquare.model;
+package com.example.bethereorbesquare.entity;
 
 import android.graphics.Color;
+import android.os.Build;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.Objects;
+
 /**
- * Objects of this class can be created from JSON response body, as
+ * Entity for storing colors. Objects of this class can be created from JSON response body.
  */
+@Entity(tableName = "Colors")
 public class CustomColor {
 
     /**
      * String representation of color's hex code, eg. "#FFFFFF"
      */
+    @ColumnInfo(name = "hex")
     @SerializedName("hex")
     private String hex;
 
     /**
      * String representation of color name
      */
+    @PrimaryKey
+    @NonNull
     @SerializedName("name")
     private String name;
 
     /**
      * String representation of rgb, as gotten from JSON body. Eg. "(255, 0, 0)"
      */
+    @ColumnInfo(name = "rgb")
     @SerializedName("rgb")
     private String rgb;
-
-    /**
-     * Int representation of rgb, gotten from passing {@code hex} to {@link Color#parseColor(String)} method
-     */
-    private int rgbInt;
 
     /**
      * Basic constructor for {@code CustomColor}, apart from the 3 variables, sets {@code rgbInt} as well.
@@ -38,11 +47,10 @@ public class CustomColor {
      * @param name {@link CustomColor#name}
      * @param rgb {@link CustomColor#rgb}
      */
-    public CustomColor(String hex, String name, String rgb) {
+    public CustomColor(String hex, @NonNull String name, String rgb) {
         this.hex = hex;
         this.name = name;
         this.rgb = rgb;
-        this.rgbInt = Color.parseColor(hex);
     }
 
     /**
@@ -62,6 +70,7 @@ public class CustomColor {
     /**
      * @return {@link CustomColor#name}
      */
+    @NonNull
     public String getName() {
         return name;
     }
@@ -69,7 +78,7 @@ public class CustomColor {
     /**
      * @param name {@link CustomColor#name}
      */
-    public void setName(String name) {
+    public void setName(@NonNull String name) {
         this.name = name;
     }
 
@@ -88,9 +97,27 @@ public class CustomColor {
     }
 
     /**
-     * @return {@link CustomColor#rgbInt}
+     * Int representation of rgb, gotten from passing {@code hex} to {@link Color#parseColor(String)} method
      */
     public int getRgbInt() {
-        return rgbInt;
+        return Color.parseColor(hex);
+    }
+
+    /**
+     * Overriden equals and hashCode methods, two {@link CustomColor} objects are equal if their {@code name}s match.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CustomColor)) return false;
+        CustomColor that = (CustomColor) o;
+        return name.equals(that.name);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
     }
 }
+

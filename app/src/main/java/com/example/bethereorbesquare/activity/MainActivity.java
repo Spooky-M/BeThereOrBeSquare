@@ -10,24 +10,20 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import com.example.bethereorbesquare.R;
-import com.example.bethereorbesquare.model.CustomColor;
-import com.example.bethereorbesquare.network.GetColorService;
-import com.example.bethereorbesquare.network.RetrofitInstance;
-import com.example.bethereorbesquare.service.DatabaseHelper;
-import com.example.bethereorbesquare.shapes.Rectangle;
-import com.google.android.material.textfield.TextInputEditText;
-
-import java.util.List;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import androidx.lifecycle.ViewModelProvider;
+
+import com.example.bethereorbesquare.R;
+import com.example.bethereorbesquare.Util;
+import com.example.bethereorbesquare.entity.CustomColor;
+import com.example.bethereorbesquare.entity.Rectangle;
+import com.example.bethereorbesquare.view.AppViewModel;
+import com.google.android.material.textfield.TextInputEditText;
+
+import java.util.List;
 
 /**
  * Home page and main Activity, contains a title label and 2 buttons. "Start" is for opening
@@ -40,19 +36,9 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
 
     /**
-     * SQLite database helper, see {@link DatabaseHelper}
+     * App's view model which contains methods for communication with {@code Room} database
      */
-    private DatabaseHelper dbHelper;
-
-    /**
-     * List of all available colors
-     */
-    private List<CustomColor> colors;
-
-    /**
-     * List of all rectangles to be drawn
-     */
-    private List<Rectangle> rectangles;
+    private AppViewModel viewModel;
 
     /**
      * A title {@link TextView}
@@ -71,9 +57,10 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar progressBar;
 
     /**
-     * Fetches colors if necessary from <a href="https://goo.gl/gEhgzs/">https://goo.gl/gEhgzs/</a>
-     * and stores them with {@link DatabaseHelper} into SQLite database. When {@code AlertDialog} element
+     * Calls {@link AppViewModel#fetchColors(Context, ProgressBar, View...)} if neccessary. A click
+     * on {@code Start} creates a new {@link AlertDialog}. When {@code AlertDialog} element
      * is filled with suitable row and column numbers, {@link Field} Activity is called.
+     * A click on {@code Continue} tries to load the last saved state.
      * @param savedInstanceState Bundle of last saved state
      */
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -91,12 +78,11 @@ public class MainActivity extends AppCompatActivity {
         // codelab -> https://codelabs.developers.google.com/codelabs/android-room-with-a-view/#13
         // primjer -> https://medium.com/mindorks/using-room-database-android-jetpack-675a89a0e942
 
-        dbHelper = new DatabaseHelper(this);
-        dbHelper.onCreate(dbHelper.getWritableDatabase());
+        viewModel = new ViewModelProvider(this).get(AppViewModel.class);
+        List<CustomColor> colors = viewModel.getAllColors().getValue();
 
-        colors = dbHelper.getAllColors();
         if(colors == null || colors.isEmpty()) {
-            fetchColors();
+            viewModel.fetchColors(this, progressBar, startButton, continueButton);
         }
 
         SharedPreferences preferences = getSharedPreferences(String.valueOf(getText(R.string.continue_preferences)), Context.MODE_PRIVATE);
@@ -122,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
                                     "row count has to be < " + maxRows +
                                     " and column count has to be < " + maxColumns + ".");
                 }
+
                 try {
                     rows = Integer.parseInt(String.valueOf(inputFieldRows.getText()));
                     columns = Integer.parseInt(String.valueOf(inputFieldColumns.getText()));
@@ -139,14 +126,20 @@ public class MainActivity extends AppCompatActivity {
                                     " and column count has to be < " + maxColumns + ".");
                     return;
                 }
+                if(colors == null) {
+                    buildAlertDialog("Error",
+                            "Colors have not been loaded.");
+                    return;
+                }
 
-                dbHelper.initNewRectanglesTable(); // inicializiraj novu tablicu tek kad korisnik unese i potvrdi parametre
                 editor.putBoolean(String.valueOf(getText(R.string.continue_key)), false);
                 editor.apply();
 
                 Bundle dimensions = new Bundle();
                 dimensions.putInt("rows", rows);
                 dimensions.putInt("columns", columns);
+
+                viewModel.insertAllRectangles(Util.makeRectangles(rows*columns, colors));
 
                 Intent intent = new Intent(MainActivity.this, Field.class);
                 intent.putExtra("dimensions", dimensions);
@@ -157,52 +150,15 @@ public class MainActivity extends AppCompatActivity {
         });
 
         continueButton.setOnClickListener(v -> {
-            rectangles = dbHelper.getAllRectangles();
+            List<Rectangle> rectangles = viewModel.getAllRectangles().getValue();
             boolean rowsValidityCheck = preferences.getInt(String.valueOf(getText(R.string.rows)), -1) > 0;
             if(rectangles == null || rectangles.isEmpty() || !rowsValidityCheck) {
-                buildAlertDialog("Error", "There's no saved state. Create a new field by clicking \"Start\".");
+                buildAlertDialog("Error",
+                        "There's no saved state. Create a new field by choosing \"Start\".");
             } else {
                 editor.putBoolean(String.valueOf(getText(R.string.continue_key)), true);
                 editor.apply();
                 startActivity(new Intent(MainActivity.this, Field.class));
-            }
-        });
-    }
-
-    /**
-     * Obtains colors using {@link RetrofitInstance}. Appropriate URL is called, and on successful response
-     * colors table is created using {@link DatabaseHelper}. While waiting for the response,
-     * {@link ProgressBar} is visible.
-     */
-    private void fetchColors() {
-        startButton.setEnabled(false);
-        continueButton.setEnabled(false);
-        progressBar.setVisibility(View.VISIBLE);
-
-        GetColorService service = RetrofitInstance.getRetrofitInstance().create(GetColorService.class);
-        Call<List<CustomColor>> call = service.getColorData();
-
-        call.enqueue(new Callback<List<CustomColor>>() {
-            @Override
-            public void onResponse(Call<List<CustomColor>> call, Response<List<CustomColor>> response) {
-                colors = response.body();
-                for(CustomColor c : colors) {
-                    c.setName(c.getName().replaceAll("'", ""));
-                }
-
-                dbHelper.initNewColorsTable();
-                dbHelper.insertAllColors(colors);
-
-                startButton.setEnabled(true);
-                continueButton.setEnabled(true);
-                progressBar.setVisibility(View.INVISIBLE);
-            }
-
-            @Override
-            public void onFailure(Call<List<CustomColor>> call, Throwable t) {
-                Toast.makeText(MainActivity.this,
-                        "Something went wrong... Please try later!", Toast.LENGTH_LONG).show();
-                progressBar.setVisibility(View.INVISIBLE);
             }
         });
     }

@@ -1,6 +1,5 @@
 package com.example.bethereorbesquare.activity;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -9,19 +8,23 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.bethereorbesquare.R;
 import com.example.bethereorbesquare.adapter.FieldAdapter;
-import com.example.bethereorbesquare.service.DatabaseHelper;
-import com.example.bethereorbesquare.shapes.Rectangle;
+import com.example.bethereorbesquare.entity.Rectangle;
+import com.example.bethereorbesquare.view.AppViewModel;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import java.util.Objects;
 
 /**
  * An activity which handles the creation and display of rectangles field. Uses {@link RecyclerView},
@@ -31,12 +34,12 @@ import androidx.recyclerview.widget.RecyclerView;
  * and updates database on exit. {@link FieldListener} listeners can be attached to follow
  * the field's state.
  */
-public class Field extends Activity implements FieldAdapter.RectangleClickListener {
+public class Field extends AppCompatActivity implements FieldAdapter.RectangleClickListener {
 
     /**
-     * SQLite database helper, see {@link DatabaseHelper}
+     * App's view model which contains methods for communication with {@code Room} database
      */
-    private DatabaseHelper dbHelper;
+    private AppViewModel viewModel;
 
     /**
      * A {@link RecyclerView} element for field display
@@ -67,7 +70,7 @@ public class Field extends Activity implements FieldAdapter.RectangleClickListen
     /**
      * Rectangle elements to be displayed
      */
-    private List<Rectangle> field;
+    private LiveData<List<Rectangle>> field;
 
     /**
      * All currently attached {@link FieldListener} listeners
@@ -89,7 +92,7 @@ public class Field extends Activity implements FieldAdapter.RectangleClickListen
         recyclerView = findViewById(R.id.recycler_view);
         switchButton = findViewById(R.id.switch_button);
 
-        dbHelper = new DatabaseHelper(this);
+        viewModel = new ViewModelProvider(this).get(AppViewModel.class);
 
         SharedPreferences preferences = getSharedPreferences(
                 String.valueOf(getText(R.string.continue_preferences)),
@@ -104,19 +107,16 @@ public class Field extends Activity implements FieldAdapter.RectangleClickListen
             rows = dimensions.getInt("rows");
             columns = dimensions.getInt("columns");
             if (rows <= 0 || columns <= 0) throw new IllegalArgumentException();
-            dbHelper.fillRectanglesTable(rows * columns, dbHelper.getAllColors());
         } else {
             rows = preferences.getInt(String.valueOf(getText(R.string.rows)), -1);
             columns = preferences.getInt(String.valueOf(getText(R.string.columns)), -1);
             if(rows < 0 || columns < 0) throw new IllegalArgumentException("Couldn't find rows or columns values!");
         }
-        field = dbHelper.getAllRectangles();
+        field = viewModel.getAllRectangles();
+        field.observe(this, this::processFieldChange);
 
-        // za bottomMarginVisible bi se slao switchButton.getVisibility() == Button.VISIBLE
-        // u slučaju da želimo provjeriti je li gumb vidljiv, i prema toma odrediti visinu
-        // polja kvadrava (RecycleView prikaza)
-        fieldAdapter = new FieldAdapter(this, field, rows, columns,
-                true);
+        fieldAdapter = new FieldAdapter(this, Objects.requireNonNull(field.getValue()),
+                rows, columns);
         fieldAdapter.setClickListener(this);
         recyclerView.setLayoutManager(new GridLayoutManager(this, columns));
         recyclerView.setHasFixedSize(true);
@@ -124,15 +124,16 @@ public class Field extends Activity implements FieldAdapter.RectangleClickListen
 
         switchButton.setOnClickListener(v -> {
             if(secondSelected != null) {
+                List<Rectangle> rectangles = field.getValue();
                 int index1 = firstSelected.getIndex(), index2 = secondSelected.getIndex();
-                field.set(index1, secondSelected);
-                field.set(index2, firstSelected);
+                rectangles.set(index1, secondSelected);
+                rectangles.set(index2, firstSelected);
                 firstSelected.setSelected(false);
                 secondSelected.setSelected(false);
                 firstSelected.setIndex(index2);
                 secondSelected.setIndex(index1);
                 firstSelected = secondSelected = null;
-                processFieldChange();
+                processFieldChange(rectangles);
             }
         });
     }
@@ -146,7 +147,8 @@ public class Field extends Activity implements FieldAdapter.RectangleClickListen
      */
     @Override
     public void onRectangleClick(View v, int position) {
-        Rectangle cur = field.get(position);
+        List<Rectangle> rectangleList = Objects.requireNonNull(field.getValue());
+        Rectangle cur = rectangleList.get(position);
         cur.setSelected(!cur.isSelected());
 
         if(cur.equals(firstSelected)) {
@@ -168,7 +170,7 @@ public class Field extends Activity implements FieldAdapter.RectangleClickListen
                 secondSelected = cur;
             }
         }
-        processFieldChange();
+        processFieldChange(rectangleList);
     }
 
     /**
@@ -178,8 +180,8 @@ public class Field extends Activity implements FieldAdapter.RectangleClickListen
     @Override
     protected void onPause() {
         super.onPause();
-        for(Rectangle r : field) {
-            dbHelper.updateRectangle(r);
+        for(Rectangle r : Objects.requireNonNull(field.getValue())) {
+            viewModel.updateRectangle(r);
         }
         SharedPreferences preferences = getSharedPreferences(
                 String.valueOf(getText(R.string.continue_preferences)),
@@ -203,22 +205,23 @@ public class Field extends Activity implements FieldAdapter.RectangleClickListen
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if(event.getAction() != KeyEvent.ACTION_DOWN) return false;
+        List<Rectangle> rectangles = Objects.requireNonNull(field.getValue());
 
         switch(keyCode) {
             case KeyEvent.KEYCODE_VOLUME_UP:
-                Rectangle last = field.remove(field.size()-1);
-                field.add(0, last);
-                for(int i = 0; i < field.size(); i++) {
-                    field.get(i).setIndex(i);
+                Rectangle last = rectangles.remove(rectangles.size()-1);
+                rectangles.add(0, last);
+                for(int i = 0; i < rectangles.size(); i++) {
+                    rectangles.get(i).setIndex(i);
                 }
-                processFieldChange();
+                processFieldChange(rectangles);
                 return true;
             case KeyEvent.KEYCODE_VOLUME_DOWN:
-                Collections.shuffle(field);
-                for(int i = 0; i < field.size(); i++) {
-                    field.get(i).setIndex(i);
+                Collections.shuffle(rectangles);
+                for(int i = 0; i < rectangles.size(); i++) {
+                    rectangles.get(i).setIndex(i);
                 }
-                processFieldChange();
+                processFieldChange(rectangles);
                 return true;
         }
         return super.onKeyDown(keyCode, event);
@@ -228,8 +231,8 @@ public class Field extends Activity implements FieldAdapter.RectangleClickListen
      * Util method for notifying the {@link Field#fieldAdapter} of data set change and calling
      * {@link Field#fieldChanged()}.
      */
-    private void processFieldChange() {
-        fieldAdapter.notifyDataSetChanged();
+    private void processFieldChange(List<Rectangle> rectangles) {
+        fieldAdapter.dataChanged(rectangles);
         recyclerView.invalidate();
         recyclerView.requestLayout();
         fieldChanged();

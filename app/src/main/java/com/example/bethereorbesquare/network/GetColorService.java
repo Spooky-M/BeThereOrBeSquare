@@ -1,6 +1,6 @@
 package com.example.bethereorbesquare.network;
 
-import com.example.bethereorbesquare.model.CustomColor;
+import com.example.bethereorbesquare.entity.CustomColor;
 
 import java.util.List;
 

@@ -1,7 +1,8 @@
 package com.example.bethereorbesquare;
 
-import com.example.bethereorbesquare.model.CustomColor;
-import com.example.bethereorbesquare.shapes.Rectangle;
+
+import com.example.bethereorbesquare.entity.CustomColor;
+import com.example.bethereorbesquare.entity.Rectangle;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,7 @@ public class Util {
      * and a color on that position is used to construct a new rectangle.
      * @param n number of rectangles to create
      * @param colors list of available colors
-     * @return
+     * @return list of initialized rectangles
      */
     public static List<Rectangle> makeRectangles(int n, List<CustomColor> colors) {
         Random rand = new Random();
