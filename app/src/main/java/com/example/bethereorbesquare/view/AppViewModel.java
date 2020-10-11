@@ -56,12 +56,7 @@ public class AppViewModel extends AndroidViewModel {
     }
 
     public LiveData<List<CustomColor>> getAllColors() {
-        return colorRepository.getAllColors();
-    }
-
-    public LiveData<List<CustomColor>> fetchColors(Context context, ProgressBar progressBar,
-                                                   View... viewsToDisable) {
-        return colorRepository.fetchColors(context, progressBar, viewsToDisable);
+        return colors;
     }
 
     public void insertColor(CustomColor c) {

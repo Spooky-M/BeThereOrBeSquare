@@ -8,6 +8,7 @@ import androidx.room.ColumnInfo;
 import androidx.room.Embedded;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
+import androidx.room.RoomWarnings;
 
 import java.util.Objects;
 
@@ -16,6 +17,7 @@ import java.util.Objects;
  * Two rectangles are equal if their ids match.
  */
 @Entity(tableName = "Rectangles")
+@SuppressWarnings(RoomWarnings.PRIMARY_KEY_FROM_EMBEDDED_IS_DROPPED)
 public class Rectangle {
 
     /**
@@ -34,7 +36,7 @@ public class Rectangle {
     /**
      * Current color of this rectangle
      */
-    @Embedded
+    @Embedded(prefix = "color_")
     private CustomColor color;
 
     /**

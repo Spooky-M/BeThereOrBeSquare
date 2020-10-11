@@ -14,7 +14,7 @@ import com.example.bethereorbesquare.entity.Rectangle;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Database(entities = {CustomColor.class, Rectangle.class}, version = 2, exportSchema = false)
+@Database(entities = {CustomColor.class, Rectangle.class}, version = 3, exportSchema = false)
 public abstract class AppRoomDatabase extends RoomDatabase {
 
     private static final String DB_NAME = "BeThereOrBeSquare_database";

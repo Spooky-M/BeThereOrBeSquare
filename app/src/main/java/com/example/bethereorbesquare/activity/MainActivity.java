@@ -3,6 +3,7 @@ package com.example.bethereorbesquare.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,6 +11,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
@@ -20,10 +22,18 @@ import com.example.bethereorbesquare.R;
 import com.example.bethereorbesquare.Util;
 import com.example.bethereorbesquare.entity.CustomColor;
 import com.example.bethereorbesquare.entity.Rectangle;
+import com.example.bethereorbesquare.network.GetColorService;
+import com.example.bethereorbesquare.network.RetrofitInstance;
+import com.example.bethereorbesquare.repository.ColorRepository;
 import com.example.bethereorbesquare.view.AppViewModel;
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * Home page and main Activity, contains a title label and 2 buttons. "Start" is for opening
@@ -36,11 +46,6 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     /**
-     * App's view model which contains methods for communication with {@code Room} database
-     */
-    private AppViewModel viewModel;
-
-    /**
      * A title {@link TextView}
      */
     private TextView title;
@@ -51,13 +56,20 @@ public class MainActivity extends AppCompatActivity {
      */
     private Button startButton, continueButton;
 
+    private List<CustomColor> colors;
+
     /**
-     * A progress bar element which is shown while the colors are being fetched
+     * App's view model which contains methods for communication with {@code Room} database
+     */
+    private AppViewModel viewModel;
+
+    /**
+     * A progress bar element which is shown while the colors are being loaded
      */
     private ProgressBar progressBar;
 
     /**
-     * Calls {@link AppViewModel#fetchColors(Context, ProgressBar, View...)} if neccessary. A click
+     * Creates a {@link ColorLoadingAsyncTask} for loading colors if necessary. A click
      * on {@code Start} creates a new {@link AlertDialog}. When {@code AlertDialog} element
      * is filled with suitable row and column numbers, {@link Field} Activity is called.
      * A click on {@code Continue} tries to load the last saved state.
@@ -71,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
         title = findViewById(R.id.title);
         startButton = findViewById(R.id.start_button);
         continueButton = findViewById(R.id.continue_button);
-        progressBar = findViewById(R.id.progress_bar);
+        progressBar = new ProgressBar(MainActivity.this);
 
         //TODO 1) Implementiraj Room umjesto SQLiteOpenHelper
         // dokumentacija -> https://developer.android.com/training/data-storage/room
@@ -81,8 +93,10 @@ public class MainActivity extends AppCompatActivity {
         viewModel = new ViewModelProvider(this).get(AppViewModel.class);
         List<CustomColor> colors = viewModel.getAllColors().getValue();
 
+        ColorLoadingAsyncTask asyncTaskColors;
         if(colors == null || colors.isEmpty()) {
-            viewModel.fetchColors(this, progressBar, startButton, continueButton);
+            asyncTaskColors = new ColorLoadingAsyncTask();
+            asyncTaskColors.execute();
         }
 
         SharedPreferences preferences = getSharedPreferences(String.valueOf(getText(R.string.continue_preferences)), Context.MODE_PRIVATE);
@@ -128,18 +142,18 @@ public class MainActivity extends AppCompatActivity {
                 }
                 if(colors == null) {
                     buildAlertDialog("Error",
-                            "Colors have not been loaded.");
+                            "Colors have not been loaded. Try restarting the app.");
                     return;
                 }
 
+                RectangleCreationAsyncTask asyncTask = new RectangleCreationAsyncTask();
+                asyncTask.execute(rows, columns);
+
                 editor.putBoolean(String.valueOf(getText(R.string.continue_key)), false);
                 editor.apply();
-
                 Bundle dimensions = new Bundle();
                 dimensions.putInt("rows", rows);
                 dimensions.putInt("columns", columns);
-
-                viewModel.insertAllRectangles(Util.makeRectangles(rows*columns, colors));
 
                 Intent intent = new Intent(MainActivity.this, Field.class);
                 intent.putExtra("dimensions", dimensions);
@@ -176,5 +190,102 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("OK", null);
         AlertDialog d = builder.create();
         d.show();
+    }
+
+    /**
+     * Class for asynchronous colors loading in a background thread.
+     */
+    private class ColorLoadingAsyncTask extends AsyncTask<Void, Integer, List<CustomColor>> {
+
+        /**
+         * Internally saved colors
+         */
+        private List<CustomColor> colors;
+
+        /**
+         *
+         */
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            continueButton.setEnabled(false);
+            startButton.setEnabled(false);
+            progressBar.setVisibility(View.VISIBLE);
+        }
+
+        /**
+         * Obtains colors using {@link RetrofitInstance}. Fetches colors from
+         * <a href="https://goo.gl/gEhgzs/">https://goo.gl/gEhgzs/</a>
+         * and stores them with {@link ColorRepository} into Room database. On successful response
+         * colors table is filled. While waiting for the response, {@link ProgressBar} is present.
+         * @return list of colors
+         */
+        @Override
+        protected List<CustomColor> doInBackground(Void... voids) {
+            GetColorService service = RetrofitInstance.getRetrofitInstance().create(GetColorService.class);
+            Call<List<CustomColor>> call = service.getColorData();
+
+            call.enqueue(new Callback<List<CustomColor>>() {
+                @Override
+                public void onResponse(Call<List<CustomColor>> call, Response<List<CustomColor>> response) {
+                    List<CustomColor> colorsList = response.body();
+                    for(CustomColor c : colorsList) {
+                        c.setName(c.getName().replaceAll("'", ""));
+                    }
+                    viewModel.insertAllColors(colorsList);
+                    MainActivity.this.colors = colorsList;
+                    progressBar.setVisibility(View.GONE);
+                }
+
+                @Override
+                public void onFailure(Call<List<CustomColor>> call, Throwable t) {
+                    Toast.makeText(MainActivity.this,
+                            "Something went wrong... Please try later!", Toast.LENGTH_LONG).show();
+                }
+            });
+            return colors;
+        }
+
+        /**
+         *
+         * @param colors list of colors loaded with {@link ColorLoadingAsyncTask#doInBackground(Void...)}
+         */
+        @Override
+        protected void onPostExecute(List<CustomColor> colors) {
+            super.onPostExecute(colors);
+            continueButton.setEnabled(true);
+            startButton.setEnabled(true);
+            MainActivity.this.colors = colors;
+        }
+    }
+
+    /**
+     * Class for asynchronous colors loading in a background thread.
+     */
+    private class RectangleCreationAsyncTask extends AsyncTask<Integer, Integer, List<Rectangle>> {
+
+        /**
+         *
+         * @param dimensions
+         * @return
+         */
+        @Override
+        protected List<Rectangle> doInBackground(Integer... dimensions) {
+            int rows = dimensions[0], columns = dimensions[1];
+            List<Rectangle> rectangles = Util.makeRectangles(rows*columns, colors);
+            if(!rectangles.isEmpty()) viewModel.insertAllRectangles(rectangles);
+            return rectangles;
+        }
+
+        /**
+         *
+         * @param rectangles
+         */
+        @Override
+        protected void onPostExecute(List<Rectangle> rectangles) {
+            super.onPostExecute(rectangles);
+            progressBar.setVisibility(View.GONE);
+
+        }
     }
 }
